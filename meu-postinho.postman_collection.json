@@ -1,0 +1,1308 @@
+{
+  "info": {
+    "_postman_id": "meu-postinho-api",
+    "name": "Meu Postinho - API Collection",
+    "description": "Coleção completa de endpoints para o sistema Meu Postinho (SUS Healthcare Optimization)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Autenticação",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('token', jsonData.token);",
+                  "    pm.environment.set('userId', jsonData.id);",
+                  "    pm.environment.set('ubsId', jsonData.ubsId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Login Sucesso",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzUxMiJ9...\",\n  \"type\": \"Bearer\",\n  \"id\": 1,\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"email\": \"joao@teste.com\",\n  \"role\": \"ROLE_MORADOR\",\n  \"ubsId\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Registrar Morador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"(11) 98765-4321\",\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar Agente (CNES)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"tipoAgente\": \"ACS\",\n  \"ubsId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/agentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agentes"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 UBS (Unidades de Saúde)",
+      "item": [
+        {
+          "name": "Listar Todas UBS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter UBS por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ubs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Nova UBS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"UBS Nova Esperança\",\n  \"codigoCnes\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar UBS",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"telefone\": \"(11) 3300-1111\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ubs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Importar UBS via CNES (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ubs/importar?codigoMunicipio=3550308",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs",
+                "importar"
+              ],
+              "query": [
+                {
+                  "key": "codigoMunicipio",
+                  "value": "3550308"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💊 Medicamentos",
+      "item": [
+        {
+          "name": "Listar Medicamentos Disponíveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos/disponiveis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos",
+                "disponiveis"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Todos Medicamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar por Categoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos/categoria/ANALGÉSICO",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos",
+                "categoria",
+                "ANALGÉSICO"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Medicamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Medicamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"codigoCatmat\": \"123ABC45\",\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Medicamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Medicamento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medicamentos/10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos",
+                "10"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Estoque de Medicamentos",
+      "item": [
+        {
+          "name": "Criar Estoque (Agente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01\",\n  \"dataVencimento\": \"2027-02-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/estoques",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Estoque por UBS (Agente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estoques/ubs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques",
+                "ubs",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Estoque por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estoques/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Estoque",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/estoques/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Quantidade",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estoques/1/quantidade?novaQuantidade=80",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques",
+                "1",
+                "quantidade"
+              ],
+              "query": [
+                {
+                  "key": "novaQuantidade",
+                  "value": "80"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Estoque",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estoques/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estoques",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🩺 Solicitações de Medicamentos",
+      "item": [
+        {
+          "name": "Criar Solicitação (Morador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"medicamentoId\": 1,\n  \"ubsId\": 1,\n  \"quantidade\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Solicitação por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Minhas Solicitações (Morador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes/usuario/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes",
+                "usuario",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Solicitações Pendentes (Agente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes/ubs/1/pendentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes",
+                "ubs",
+                "1",
+                "pendentes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Aceitar Solicitação (Agente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes/1/aceitar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes",
+                "1",
+                "aceitar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recusar Solicitação (Agente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitacoes/2/recusar?justificativa=Medicamento%20fora%20de%20estoque",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitacoes",
+                "2",
+                "recusar"
+              ],
+              "query": [
+                {
+                  "key": "justificativa",
+                  "value": "Medicamento fora de estoque"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗓️ Vagas e Agendamentos",
+      "item": [
+        {
+          "name": "Criar Vaga (Agente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vagas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Vagas por UBS (Agente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vagas/ubs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "ubs",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vagas Disponíveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vagas/disponiveis?ubsId=1&data=2025-02-15&especialidade=Clínica Geral",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "disponiveis"
+              ],
+              "query": [
+                {
+                  "key": "ubsId",
+                  "value": "1"
+                },
+                {
+                  "key": "data",
+                  "value": "2025-02-15"
+                },
+                {
+                  "key": "especialidade",
+                  "value": "Clínica Geral"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Vaga por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vagas/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Vaga",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vagas/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Vaga",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vagas/10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "10"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Agendamentos",
+      "item": [
+        {
+          "name": "Agendar Consulta (Morador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos?usuarioId=1&vagaId=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "1"
+                },
+                {
+                  "key": "vagaId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Agendamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Meus Agendamentos (Morador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos/meus?usuarioId=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "meus"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar Agendamento (Morador)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos/1?motivoCancelamento=Não%20posso%20comparecer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "motivoCancelamento",
+                  "value": "Não posso comparecer"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar Comparecimento (Agente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos/1/comparecimento",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "1",
+                "comparecimento"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar Não-Comparecimento (Agente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agendamentos/2/nao-comparecimento",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "2",
+                "nao-comparecimento"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📰 Notícias e Comunicados",
+      "item": [
+        {
+          "name": "Criar Notícia (Agente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS Parque São Vicente informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/noticias",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Notícia por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/noticias/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Minhas Notícias (Morador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/noticias/minhas?ubsId=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias",
+                "minhas"
+              ],
+              "query": [
+                {
+                  "key": "ubsId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notícias Públicas por UBS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/noticias/ubs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias",
+                "ubs",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Notícia (Agente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/noticias/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Notícia (Agente)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/noticias/5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "noticias",
+                "5"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Configurar variáveis iniciais",
+          "pm.environment.set('base_url', 'http://localhost:8080');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ubsId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

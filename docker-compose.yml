@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: meupostinho-postgres
+    environment:
+      POSTGRES_DB: meupostinho
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d meupostinho"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meupostinho-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meupostinho-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/meupostinho
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      APP_JWT_SECRET: ChaveSecretaMuitoComplexaParaOTokenJWTDoProjeto1234567890ProjMeuPostinho
+      APP_JWT_EXPIRATION: 86400000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - meupostinho-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  meupostinho-network:
+    driver: bridge
