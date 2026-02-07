@@ -7,16 +7,9 @@ Plataforma inovadora para otimizar o atendimento em Unidades Básicas de Saúde 
 ## 📋 Visão Geral
 
 **Problema a resolver:**
-- 40% de no-shows (faltas) em consultas agendadas
+- Redução de no-shows (faltas) em consultas agendadas
 - Idas frustradas ao posto (medicamento em falta)
 - Falhas de comunicação entre UBS e população
-
-**Objetivos mensuráveis:**
-- ✅ Reduzir no-shows de 40% para 15-20%
-- ✅ Diminuir idas frustradas em 70%
-- ✅ Aumentar adesão ao tratamento em 25%
-
----
 
 ## 🎯 Recursos Principais
 
@@ -490,57 +483,4 @@ SERVER_PORT=8080
 ### Medicamentos (Lista RENAME)
 25 medicamentos comuns no SUS: Paracetamol, Ibuprofeno, Losartana, Metformina, Amoxicilina, Azitromicina, Omeprazol, Ranitidina, e outros.
 
----
 
-## 🚀 Próximos Passos (Roadmap)
-
-- [ ] Sistema de notificações por SMS/WhatsApp
-- [ ] Dashboard para Agentes com estatísticas
-- [ ] Integração real com API CNES
-- [ ] App mobile (Android/iOS)
-- [ ] Sistema de avaliação de atendimento
-- [ ] Relatórios e analytics
-- [ ] Multi-UBS e territorialização avançada
-- [ ] Sistema de lembretes automáticos
-
----
-
-## 🤝 Contribuindo
-
-Este é um projeto de hackathon acadêmico. Para contribuir:
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença Apache 2.0 - veja o arquivo LICENSE para detalhes.
-
----
-
-## 📞 Contato
-
-**Equipe Meu Postinho**
-- Email: contato@meupostinho.com
-- GitHub: https://github.com/seu-repo
-
----
-
-## 🏆 Critérios de Avaliação do Hackathon
-
-| Critério | Peso | Status |
-|----------|------|--------|
-| Problema e Impacto | 20% | ✅ |
-| Inovação | 20% | ✅ |
-| Funcionalidade MVP | 30% | ✅ |
-| Apresentação e Código | 20% | ✅ |
-| Documentação | 10% | ✅ |
-
----
-
-**Desenvolvido com ❤️ para a Pós-graduação FIAP - Arquitetura e Desenvolvimento Java**
