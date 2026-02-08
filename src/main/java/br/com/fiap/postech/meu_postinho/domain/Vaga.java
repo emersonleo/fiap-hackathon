@@ -48,10 +48,10 @@ public class Vaga {
     @Column(name = "disponivel", nullable = false)
     private Boolean disponivel = true;
     
-    @Column(name = "data_criacao", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
     
-    @Column(name = "data_atualizacao")
+    @Column(name = "updated_at")
     private LocalDateTime dataAtualizacao;
     
     @OneToMany(mappedBy = "vaga", cascade = CascadeType.ALL, orphanRemoval = true)

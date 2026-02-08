@@ -44,10 +44,10 @@ public class EstoqueMedicamento {
     @Column(name = "em_falta", nullable = false)
     private Boolean emFalta = false;
     
-    @Column(name = "data_criacao", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
     
-    @Column(name = "data_atualizacao")
+    @Column(name = "updated_at")
     private LocalDateTime dataAtualizacao;
     
     @PrePersist

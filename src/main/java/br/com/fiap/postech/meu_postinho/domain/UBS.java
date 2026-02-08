@@ -56,10 +56,10 @@ public class UBS {
     @Column(name = "ativa", nullable = false)
     private Boolean ativa = true;
     
-    @Column(name = "data_criacao", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
     
-    @Column(name = "data_atualizacao")
+    @Column(name = "updated_at")
     private LocalDateTime dataAtualizacao;
     
     @OneToMany(mappedBy = "ubs", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -2,12 +2,13 @@ package br.com.fiap.postech.meu_postinho.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@DiscriminatorValue("AGENTE")
+@DiscriminatorValue("Agente")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,15 +18,17 @@ import java.time.LocalDateTime;
 public class Agente extends Usuario {
     
     @NotBlank
-    @Column(name = "cns", unique = true, nullable = false)
+    @Column(name = "cns", unique = true, nullable = true)
     private String cns;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_agente", nullable = false)
+    @NotNull
+    @Column(name = "tipo_agente", nullable = true)
     private TipoAgente tipo;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_cnes", nullable = false)
+    @NotNull
+    @Column(name = "status_cnes", nullable = true)
     private StatusCNES statusCnes;
     
     @Column(name = "data_verificacao_cnes")

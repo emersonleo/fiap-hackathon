@@ -74,10 +74,10 @@ public class Usuario {
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
     
-    @Column(name = "data_criacao", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
     
-    @Column(name = "data_atualizacao")
+    @Column(name = "updated_at")
     private LocalDateTime dataAtualizacao;
     
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)

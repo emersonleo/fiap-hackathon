@@ -7,6 +7,144 @@
   },
   "item": [
     {
+      "name": "⚙️ Setup",
+      "item": [
+        {
+          "name": "Setup - Carregar variáveis dinâmicas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const baseUrl = pm.environment.get('base_url') || pm.collectionVariables.get('base_url');",
+                  "if (!baseUrl) {",
+                  "  throw new Error('base_url não definido no ambiente/collection');",
+                  "}",
+                  "",
+                  "const setIfPresent = (key, value) => {",
+                  "  if (value !== undefined && value !== null && value !== '') pm.environment.set(key, value);",
+                  "};",
+                  "",
+                  "const safeJson = (res) => {",
+                  "  try { return res.json(); } catch (e) { return null; }",
+                  "};",
+                  "",
+                  "const requestJson = (opt) => new Promise((resolve) => {",
+                  "  pm.sendRequest(opt, (err, res) => resolve({ err, res }));",
+                  "});",
+                  "",
+                  "(async () => {",
+                  "  // 1) Descobrir UBS (pública)",
+                  "  const ubsResp = await requestJson({ url: `${baseUrl}/api/ubs`, method: 'GET' });",
+                  "  if (!ubsResp.err && ubsResp.res && ubsResp.res.code === 200) {",
+                  "    const data = safeJson(ubsResp.res);",
+                  "    if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('ubsId', data[0].id);",
+                  "  }",
+                  "",
+                  "  // 2) Login se não houver token",
+                  "  let token = pm.environment.get('token');",
+                  "  if (!token) {",
+                  "    const email = pm.environment.get('setup_email') || 'joao@teste.com';",
+                  "    const senha = pm.environment.get('setup_senha') || 'Senha@123456';",
+                  "    const loginResp = await requestJson({",
+                  "      url: `${baseUrl}/api/auth/login`,",
+                  "      method: 'POST',",
+                  "      header: { 'Content-Type': 'application/json' },",
+                  "      body: { mode: 'raw', raw: JSON.stringify({ email, senha }) }",
+                  "    });",
+                  "    if (!loginResp.err && loginResp.res && loginResp.res.code === 200) {",
+                  "      const data = safeJson(loginResp.res) || {};",
+                  "      setIfPresent('token', data.token);",
+                  "      setIfPresent('userId', data.id);",
+                  "      setIfPresent('ubsId', data.ubsId || pm.environment.get('ubsId'));",
+                  "      token = data.token;",
+                  "    }",
+                  "  }",
+                  "",
+                  "  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};",
+                  "  const ubsId = pm.environment.get('ubsId');",
+                  "  const userId = pm.environment.get('userId');",
+                  "",
+                  "  // 3) Medicamentos (autenticado)",
+                  "  const medResp = await requestJson({ url: `${baseUrl}/api/medicamentos`, method: 'GET', header: authHeader });",
+                  "  if (!medResp.err && medResp.res && medResp.res.code === 200) {",
+                  "    const data = safeJson(medResp.res);",
+                  "    if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('medicamentoId', data[0].id);",
+                  "  }",
+                  "",
+                  "  // 4) Vagas por UBS (AGENTE). Se falhar por role, segue adiante.",
+                  "  if (ubsId) {",
+                  "    const vagaResp = await requestJson({ url: `${baseUrl}/api/vagas/ubs/${ubsId}`, method: 'GET', header: authHeader });",
+                  "    if (!vagaResp.err && vagaResp.res && vagaResp.res.code === 200) {",
+                  "      const data = safeJson(vagaResp.res);",
+                  "      if (Array.isArray(data) && data.length > 0) {",
+                  "        const first = data.find(v => v && v.disponivel) || data[0];",
+                  "        if (first && first.id) setIfPresent('vagaId', first.id);",
+                  "      }",
+                  "    }",
+                  "  }",
+                  "",
+                  "  // 5) Estoques por UBS (AGENTE)",
+                  "  if (ubsId) {",
+                  "    const estResp = await requestJson({ url: `${baseUrl}/api/estoques/ubs/${ubsId}`, method: 'GET', header: authHeader });",
+                  "    if (!estResp.err && estResp.res && estResp.res.code === 200) {",
+                  "      const data = safeJson(estResp.res);",
+                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('estoqueId', data[0].id);",
+                  "    }",
+                  "  }",
+                  "",
+                  "  // 6) Solicitações do usuário (MORADOR)",
+                  "  if (userId) {",
+                  "    const solResp = await requestJson({ url: `${baseUrl}/api/solicitacoes/usuario/${userId}`, method: 'GET', header: authHeader });",
+                  "    if (!solResp.err && solResp.res && solResp.res.code === 200) {",
+                  "      const data = safeJson(solResp.res);",
+                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('solicitacaoId', data[0].id);",
+                  "    }",
+                  "  }",
+                  "",
+                  "  // 7) Meus agendamentos (MORADOR)",
+                  "  if (userId) {",
+                  "    const agResp = await requestJson({ url: `${baseUrl}/api/agendamentos/meus?usuarioId=${userId}`, method: 'GET', header: authHeader });",
+                  "    if (!agResp.err && agResp.res && agResp.res.code === 200) {",
+                  "      const data = safeJson(agResp.res);",
+                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('agendamentoId', data[0].id);",
+                  "    }",
+                  "  }",
+                  "",
+                  "  // 8) Notícias por UBS (pública)",
+                  "  if (ubsId) {",
+                  "    const notResp = await requestJson({ url: `${baseUrl}/api/noticias/ubs/${ubsId}`, method: 'GET' });",
+                  "    if (!notResp.err && notResp.res && notResp.res.code === 200) {",
+                  "      const data = safeJson(notResp.res);",
+                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('noticiaId', data[0].id);",
+                  "    }",
+                  "  }",
+                  "",
+                  "  pm.test('Setup executado', function () { pm.expect(true).to.eql(true); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ubs"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "🔐 Autenticação",
       "item": [
         {
@@ -80,6 +218,44 @@
         },
         {
           "name": "Registrar Morador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const pad = (n, w) => String(n).padStart(w, '0');",
+                  "const now = Date.now();",
+                  "const suffix = pad(now % 1000000, 6);",
+                  "const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;",
+                  "const calcCpfDigit = (base, factor) => {",
+                  "  let total = 0;",
+                  "  for (let i = 0; i < base.length; i++) {",
+                  "    total += parseInt(base.charAt(i), 10) * (factor - i);",
+                  "  }",
+                  "  const mod = total % 11;",
+                  "  return (mod < 2) ? 0 : (11 - mod);",
+                  "};",
+                  "const genCpf = () => {",
+                  "  // gera 9 dígitos base e calcula os 2 verificadores (CPF válido)",
+                  "  let base = '';",
+                  "  for (let i = 0; i < 9; i++) base += String(randInt(0, 9));",
+                  "  // evita CPFs com todos dígitos iguais (ex: 000000000)",
+                  "  if (/^(\\d)\\1{8}$/.test(base)) base = '123456789';",
+                  "  const d1 = calcCpfDigit(base, 10);",
+                  "  const d2 = calcCpfDigit(base + String(d1), 11);",
+                  "  return base + String(d1) + String(d2);",
+                  "};",
+                  "const cpf = genCpf();",
+                  "const telefone = `(11) 9${suffix.slice(0, 4)}-${suffix.slice(4, 8).padEnd(4, '0')}`;",
+                  "const email = `morador_${suffix}@teste.com`;",
+                  "pm.environment.set('register_cpf', cpf);",
+                  "pm.environment.set('register_telefone', telefone);",
+                  "pm.environment.set('register_email', email);",
+                  "pm.environment.set('register_senha', 'Senha@123456');"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -90,7 +266,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"(11) 98765-4321\",\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": 1\n}"
+              "raw": "{\n  \"cpf\": \"{{register_cpf}}\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"{{register_telefone}}\",\n  \"email\": \"{{register_email}}\",\n  \"senha\": \"{{register_senha}}\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": {{ubsId}}\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
@@ -117,7 +293,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"tipoAgente\": \"ACS\",\n  \"ubsId\": 1\n}"
+              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"endereco\": \"Av. da Saúde, 500\",\n  \"cep\": \"01310-100\",\n  \"tipo\": \"ACS\",\n  \"ubsId\": {{ubsId}}\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/agentes",
@@ -138,6 +314,21 @@
       "item": [
         {
           "name": "Listar Todas UBS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (!pm.environment.get('ubsId') && Array.isArray(data) && data.length > 0 && data[0].id) {",
+                  "    pm.environment.set('ubsId', data[0].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -159,14 +350,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/ubs/1",
+              "raw": "{{base_url}}/api/ubs/{{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "ubs",
-                "1"
+                "{{ubsId}}"
               ]
             }
           }
@@ -187,7 +378,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"UBS Nova Esperança\",\n  \"codigoCnes\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+              "raw": "{\n  \"nome\": \"UBS Nova Esperança\",\n  \"codigoCNES\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/ubs",
@@ -217,17 +408,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"telefone\": \"(11) 3300-1111\"\n}"
+              "raw": "{\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"codigoCNES\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-1111\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/ubs/1",
+              "raw": "{{base_url}}/api/ubs/{{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "ubs",
-                "1"
+                "{{ubsId}}"
               ]
             }
           }
@@ -291,6 +482,21 @@
         },
         {
           "name": "Listar Todos Medicamentos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (!pm.environment.get('medicamentoId') && Array.isArray(data) && data.length > 0 && data[0].id) {",
+                  "    pm.environment.set('medicamentoId', data[0].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -346,14 +552,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/1",
+              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "1"
+                "{{medicamentoId}}"
               ]
             }
           }
@@ -374,7 +580,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"codigoCatmat\": \"123ABC45\",\n  \"ativo\": true\n}"
+              "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"codigoCATMAT\": \"123ABC45\",\n  \"ativo\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/medicamentos",
@@ -404,17 +610,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\"\n}"
+              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"ativo\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/1",
+              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "1"
+                "{{medicamentoId}}"
               ]
             }
           }
@@ -430,14 +636,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/10",
+              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "10"
+                "{{medicamentoId}}"
               ]
             }
           }
@@ -449,6 +655,19 @@
       "item": [
         {
           "name": "Criar Estoque (Agente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data && data.id) pm.environment.set('estoqueId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -463,7 +682,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01\",\n  \"dataVencimento\": \"2027-02-01\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01T00:00:00\",\n  \"dataVencimento\": \"2027-02-01T00:00:00\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/estoques",
@@ -488,7 +707,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/ubs/1",
+              "raw": "{{base_url}}/api/estoques/ubs/{{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -496,7 +715,7 @@
                 "api",
                 "estoques",
                 "ubs",
-                "1"
+                "{{ubsId}}"
               ]
             }
           }
@@ -512,14 +731,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/1",
+              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "{{estoqueId}}"
               ]
             }
           }
@@ -540,17 +759,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/estoques/1",
+              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "{{estoqueId}}"
               ]
             }
           }
@@ -566,14 +785,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/1/quantidade?novaQuantidade=80",
+              "raw": "{{base_url}}/api/estoques/{{estoqueId}}/quantidade?novaQuantidade=80",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1",
+                "{{estoqueId}}",
                 "quantidade"
               ],
               "query": [
@@ -596,14 +815,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/1",
+              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "{{estoqueId}}"
               ]
             }
           }
@@ -615,6 +834,19 @@
       "item": [
         {
           "name": "Criar Solicitação (Morador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data && data.id) pm.environment.set('solicitacaoId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -629,7 +861,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": 1,\n  \"medicamentoId\": 1,\n  \"ubsId\": 1,\n  \"quantidade\": 2\n}"
+              "raw": "{\n  \"usuarioId\": {{userId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"ubsId\": {{ubsId}},\n  \"quantidade\": 2\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/solicitacoes",
@@ -654,14 +886,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/1",
+              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "1"
+                "{{solicitacaoId}}"
               ]
             }
           }
@@ -677,7 +909,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/usuario/1",
+              "raw": "{{base_url}}/api/solicitacoes/usuario/{{userId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -685,7 +917,7 @@
                 "api",
                 "solicitacoes",
                 "usuario",
-                "1"
+                "{{userId}}"
               ]
             }
           }
@@ -701,7 +933,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/ubs/1/pendentes",
+              "raw": "{{base_url}}/api/solicitacoes/ubs/{{ubsId}}/pendentes",
               "host": [
                 "{{base_url}}"
               ],
@@ -709,7 +941,7 @@
                 "api",
                 "solicitacoes",
                 "ubs",
-                "1",
+                "{{ubsId}}",
                 "pendentes"
               ]
             }
@@ -726,14 +958,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/1/aceitar",
+              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}/aceitar",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "1",
+                "{{solicitacaoId}}",
                 "aceitar"
               ]
             }
@@ -750,14 +982,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/2/recusar?justificativa=Medicamento%20fora%20de%20estoque",
+              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}/recusar?justificativa=Medicamento%20fora%20de%20estoque",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "2",
+                "{{solicitacaoId}}",
                 "recusar"
               ],
               "query": [
@@ -790,7 +1022,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/vagas",
@@ -806,6 +1038,22 @@
         },
         {
           "name": "Listar Vagas por UBS (Agente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  const first = Array.isArray(data) ? data.find(v => v && v.disponivel) || data[0] : null;",
+                  "  if (first && first.id) {",
+                  "    pm.environment.set('vagaId', first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -815,7 +1063,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/ubs/1",
+              "raw": "{{base_url}}/api/vagas/ubs/{{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -823,7 +1071,7 @@
                 "api",
                 "vagas",
                 "ubs",
-                "1"
+                "{{ubsId}}"
               ]
             }
           }
@@ -839,7 +1087,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/disponiveis?ubsId=1&data=2025-02-15&especialidade=Clínica Geral",
+              "raw": "{{base_url}}/api/vagas/disponiveis?ubsId={{ubsId}}&data=2025-02-15&especialidade=Clínica Geral",
               "host": [
                 "{{base_url}}"
               ],
@@ -851,7 +1099,7 @@
               "query": [
                 {
                   "key": "ubsId",
-                  "value": "1"
+                  "value": "{{ubsId}}"
                 },
                 {
                   "key": "data",
@@ -876,14 +1124,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/1",
+              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "vagas",
-                "1"
+                "{{vagaId}}"
               ]
             }
           }
@@ -904,17 +1152,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/vagas/1",
+              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "vagas",
-                "1"
+                "{{vagaId}}"
               ]
             }
           }
@@ -930,14 +1178,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/10",
+              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "vagas",
-                "10"
+                "{{vagaId}}"
               ]
             }
           }
@@ -949,6 +1197,20 @@
       "item": [
         {
           "name": "Agendar Consulta (Morador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data && data.id) pm.environment.set('agendamentoId', data.id);",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -958,7 +1220,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos?usuarioId=1&vagaId=1",
+              "raw": "{{base_url}}/api/agendamentos?usuarioId={{userId}}&vagaId={{vagaId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -969,11 +1231,11 @@
               "query": [
                 {
                   "key": "usuarioId",
-                  "value": "1"
+                  "value": "{{userId}}"
                 },
                 {
                   "key": "vagaId",
-                  "value": "1"
+                  "value": "{{vagaId}}"
                 }
               ]
             }
@@ -990,14 +1252,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/1",
+              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1"
+                "{{agendamentoId}}"
               ]
             }
           }
@@ -1013,7 +1275,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/meus?usuarioId=1",
+              "raw": "{{base_url}}/api/agendamentos/meus?usuarioId={{userId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1025,7 +1287,7 @@
               "query": [
                 {
                   "key": "usuarioId",
-                  "value": "1"
+                  "value": "{{userId}}"
                 }
               ]
             }
@@ -1042,14 +1304,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/1?motivoCancelamento=Não%20posso%20comparecer",
+              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}?motivoCancelamento=Não%20posso%20comparecer",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1"
+                "{{agendamentoId}}"
               ],
               "query": [
                 {
@@ -1071,14 +1333,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/1/comparecimento",
+              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}/comparecimento",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1",
+                "{{agendamentoId}}",
                 "comparecimento"
               ]
             }
@@ -1095,14 +1357,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/2/nao-comparecimento",
+              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}/nao-comparecimento",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "2",
+                "{{agendamentoId}}",
                 "nao-comparecimento"
               ]
             }
@@ -1115,6 +1377,19 @@
       "item": [
         {
           "name": "Criar Notícia (Agente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data && data.id) pm.environment.set('noticiaId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1129,7 +1404,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS Parque São Vicente informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01T00:00:00\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/noticias",
@@ -1154,14 +1429,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/1",
+              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "noticias",
-                "1"
+                "{{noticiaId}}"
               ]
             }
           }
@@ -1177,7 +1452,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/minhas?ubsId=1",
+              "raw": "{{base_url}}/api/noticias/minhas?ubsId={{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1189,7 +1464,7 @@
               "query": [
                 {
                   "key": "ubsId",
-                  "value": "1"
+                  "value": "{{ubsId}}"
                 }
               ]
             }
@@ -1201,7 +1476,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/noticias/ubs/1",
+              "raw": "{{base_url}}/api/noticias/ubs/{{ubsId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1209,7 +1484,7 @@
                 "api",
                 "noticias",
                 "ubs",
-                "1"
+                "{{ubsId}}"
               ]
             }
           }
@@ -1230,17 +1505,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
+              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/noticias/1",
+              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "noticias",
-                "1"
+                "{{noticiaId}}"
               ]
             }
           }
@@ -1256,14 +1531,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/5",
+              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "noticias",
-                "5"
+                "{{noticiaId}}"
               ]
             }
           }
@@ -1290,6 +1565,16 @@
       "type": "string"
     },
     {
+      "key": "setup_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "setup_senha",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "token",
       "value": "",
       "type": "string"
@@ -1301,7 +1586,37 @@
     },
     {
       "key": "ubsId",
-      "value": "1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "medicamentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vagaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agendamentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "estoqueId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "solicitacaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "noticiaId",
+      "value": "",
       "type": "string"
     }
   ]
