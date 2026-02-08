@@ -17,8 +17,8 @@ import java.util.Set;
     @UniqueConstraint(columnNames = "telefone")
 })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "tipo_usuario", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("MORADOR")
+@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("Usuario")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -83,7 +83,7 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SolicitacaoMedicamento> solicitacoes = new HashSet<>();
     
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Agendamento> agendamentos = new HashSet<>();
     
     @PrePersist

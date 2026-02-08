@@ -34,7 +34,7 @@ public class AgendamentoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vaga não encontrada"));
         
         // Verificar se usuário já tem agendamento ativo
-        List<Agendamento> agendamentosAtivos = agendamentoRepository.findByUsuarioIdAndStatusIn(
+        List<Agendamento> agendamentosAtivos = agendamentoRepository.findByPacienteIdAndStatusIn(
                 usuarioId, Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU)
         );
         
@@ -66,7 +66,7 @@ public class AgendamentoService {
     }
     
     public List<AgendamentoDTO> listarPorUsuario(Long usuarioId) {
-        return agendamentoRepository.findByUsuarioId(usuarioId).stream()
+        return agendamentoRepository.findByPacienteId(usuarioId).stream()
                 .map(this::converterParaDTO)
                 .collect(Collectors.toList());
     }

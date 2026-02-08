@@ -78,7 +78,7 @@ public class AuthService {
             throw new BadRequestException("Telefone inválido");
         }
         
-        if (usuarioRepository.existByTelefone(usuarioDTO.getTelefone())) {
+        if (usuarioRepository.existsByTelefone(usuarioDTO.getTelefone())) {
             throw new BadRequestException("Telefone já registrado");
         }
         

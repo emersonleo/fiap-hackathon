@@ -1,174 +1,156 @@
--- V1__Initial_Schema.sql
--- Schema inicial do Meu Postinho
-
--- Criar extension para UUID se necessário
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- V1__create_initial_schema.sql
+-- Schema inicial do Meu Postinho - CORRIGIDO
 
 -- Tabela UBS
-CREATE TABLE IF NOT EXISTS ubs (
+CREATE TABLE ubs (
     id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL UNIQUE,
-    codigo_cnes VARCHAR(10) UNIQUE,
-    endereco VARCHAR(255) NOT NULL,
-    cep VARCHAR(10) NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado CHAR(2) NOT NULL,
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
-    ativa BOOLEAN NOT NULL DEFAULT true,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ubs_estado_chk CHECK (estado ~ '^[A-Z]{2}$')
+    codigo_cnes VARCHAR(20) UNIQUE NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    endereco VARCHAR(500),
+    telefone VARCHAR(20),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    tipo VARCHAR(100),
+    horario_funcionamento VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ubs_cidade ON ubs(cidade);
-CREATE INDEX idx_ubs_ativa ON ubs(ativa);
+CREATE INDEX idx_ubs_codigo_cnes ON ubs(codigo_cnes);
 
--- Tabela Usuario (base com herança SINGLE_TABLE)
-CREATE TABLE IF NOT EXISTS usuario (
+-- Tabela Usuario (Single Table Inheritance com DTYPE)
+CREATE TABLE usuario (
     id BIGSERIAL PRIMARY KEY,
-    tipo_usuario VARCHAR(25) NOT NULL DEFAULT 'MORADOR',
-    cpf VARCHAR(20) NOT NULL UNIQUE,
-    nome VARCHAR(150) NOT NULL,
-    telefone VARCHAR(20) NOT NULL UNIQUE,
-    email VARCHAR(255) UNIQUE,
+    dtype VARCHAR(31) NOT NULL DEFAULT 'Usuario', -- 'Usuario' ou 'Agente'
+    cpf VARCHAR(11) UNIQUE NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    telefone VARCHAR(20) UNIQUE NOT NULL,
+    email VARCHAR(255),
     senha VARCHAR(255) NOT NULL,
-    data_nascimento VARCHAR(10),
-    endereco VARCHAR(255) NOT NULL,
-    cep VARCHAR(10) NOT NULL,
-    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE RESTRICT,
-    ativo BOOLEAN NOT NULL DEFAULT true,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    -- Campos específicos para Agente
-    cns VARCHAR(20) UNIQUE,
-    tipo_agente VARCHAR(25),
-    status_cnes VARCHAR(25),
-    data_verificacao_cnes TIMESTAMP,
-    CONSTRAINT usuario_tipo_usuario_chk CHECK (tipo_usuario IN ('MORADOR', 'AGENTE'))
+    data_nascimento DATE,
+    endereco VARCHAR(500),
+    cep VARCHAR(8),
+    ubs_id BIGINT REFERENCES ubs(id),
+    
+    -- Campos específicos de Agente (nullable para Usuario comum)
+    cns VARCHAR(15),
+    tipo VARCHAR(10), -- 'ACS' ou 'ACE'
+    status_cnes VARCHAR(50),
+    data_verificacao TIMESTAMP,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT chk_agente_fields CHECK (
+        (dtype = 'Agente' AND cns IS NOT NULL AND tipo IS NOT NULL) OR
+        (dtype = 'Usuario' AND cns IS NULL AND tipo IS NULL)
+    )
 );
 
 CREATE INDEX idx_usuario_cpf ON usuario(cpf);
+CREATE INDEX idx_usuario_ubs ON usuario(ubs_id);
+CREATE INDEX idx_usuario_dtype ON usuario(dtype);
 CREATE INDEX idx_usuario_email ON usuario(email);
-CREATE INDEX idx_usuario_ubs_id ON usuario(ubs_id);
-CREATE INDEX idx_usuario_tipo ON usuario(tipo_usuario);
-
--- Tabela de Roles de Usuário
-CREATE TABLE IF NOT EXISTS usuario_roles (
-    usuario_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
-    role VARCHAR(50) NOT NULL,
-    PRIMARY KEY (usuario_id, role)
-);
 
 -- Tabela Medicamento
-CREATE TABLE IF NOT EXISTS medicamento (
+CREATE TABLE medicamento (
     id BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    categoria VARCHAR(100) NOT NULL,
-    posologia VARCHAR(255),
-    unidade VARCHAR(50) NOT NULL,
-    codigo_catmat VARCHAR(30) UNIQUE,
-    ativo BOOLEAN NOT NULL DEFAULT true,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    categoria VARCHAR(100),
+    unidade VARCHAR(50),
+    codigo_catmat VARCHAR(50) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_medicamento_nome ON medicamento(nome);
 CREATE INDEX idx_medicamento_categoria ON medicamento(categoria);
-CREATE INDEX idx_medicamento_ativo ON medicamento(ativo);
 
--- Tabela EstoqueMedicamento
-CREATE TABLE IF NOT EXISTS estoque_medicamento (
+-- Tabela Estoque de Medicamento
+CREATE TABLE estoque_medicamento (
     id BIGSERIAL PRIMARY KEY,
-    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
     medicamento_id BIGINT NOT NULL REFERENCES medicamento(id) ON DELETE CASCADE,
-    quantidade INTEGER NOT NULL DEFAULT 0,
-    quantidade_minima INTEGER NOT NULL DEFAULT 10,
-    data_entrada TIMESTAMP,
-    data_vencimento TIMESTAMP,
-    em_falta BOOLEAN NOT NULL DEFAULT false,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(ubs_id, medicamento_id),
-    CONSTRAINT estoque_quantidade_chk CHECK (quantidade >= 0)
+    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
+    quantidade INT NOT NULL DEFAULT 0,
+    data_ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lote VARCHAR(100),
+    validade DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(medicamento_id, ubs_id),
+    CONSTRAINT chk_quantidade_positiva CHECK (quantidade >= 0)
 );
 
-CREATE INDEX idx_estoque_ubs_id ON estoque_medicamento(ubs_id);
-CREATE INDEX idx_estoque_medicamento_id ON estoque_medicamento(medicamento_id);
-CREATE INDEX idx_estoque_em_falta ON estoque_medicamento(em_falta);
+CREATE INDEX idx_estoque_ubs ON estoque_medicamento(ubs_id);
+CREATE INDEX idx_estoque_medicamento ON estoque_medicamento(medicamento_id);
 
--- Tabela SolicitacaoMedicamento
-CREATE TABLE IF NOT EXISTS solicitacao_medicamento (
+-- Tabela Solicitação de Medicamento
+CREATE TABLE solicitacao_medicamento (
     id BIGSERIAL PRIMARY KEY,
-    usuario_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
-    medicamento_id BIGINT NOT NULL REFERENCES medicamento(id) ON DELETE RESTRICT,
-    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE RESTRICT,
-    quantidade INTEGER NOT NULL,
-    status VARCHAR(25) NOT NULL DEFAULT 'PENDENTE',
+    paciente_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
+    medicamento_id BIGINT NOT NULL REFERENCES medicamento(id) ON DELETE CASCADE,
+    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
+    quantidade INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE',
+    data_solicitacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_resposta TIMESTAMP,
     justificativa_recusa TEXT,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_processamento TIMESTAMP,
-    CONSTRAINT solicitacao_quantidade_chk CHECK (quantidade > 0),
-    CONSTRAINT solicitacao_status_chk CHECK (status IN ('PENDENTE', 'ACEITA', 'RECUSADA', 'ENTREGUE'))
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT chk_quantidade_solicitacao CHECK (quantidade > 0),
+    CONSTRAINT chk_status_solicitacao CHECK (status IN ('PENDENTE', 'ACEITA', 'RECUSADA'))
 );
 
-CREATE INDEX idx_solicitacao_usuario_id ON solicitacao_medicamento(usuario_id);
-CREATE INDEX idx_solicitacao_medicamento_id ON solicitacao_medicamento(medicamento_id);
-CREATE INDEX idx_solicitacao_ubs_id ON solicitacao_medicamento(ubs_id);
 CREATE INDEX idx_solicitacao_status ON solicitacao_medicamento(status);
+CREATE INDEX idx_solicitacao_paciente ON solicitacao_medicamento(paciente_id);
+CREATE INDEX idx_solicitacao_ubs ON solicitacao_medicamento(ubs_id);
 
 -- Tabela Vaga
-CREATE TABLE IF NOT EXISTS vaga (
+CREATE TABLE vaga (
     id BIGSERIAL PRIMARY KEY,
-    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
-    data_vaga DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fim TIME NOT NULL,
+    data DATE NOT NULL,
+    hora TIME NOT NULL,
     especialidade VARCHAR(100) NOT NULL,
-    profissional VARCHAR(150) NOT NULL,
-    disponivel BOOLEAN NOT NULL DEFAULT true,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
+    disponivel BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_vaga_ubs_id ON vaga(ubs_id);
-CREATE INDEX idx_vaga_data ON vaga(data_vaga);
-CREATE INDEX idx_vaga_especialidade ON vaga(especialidade);
+CREATE INDEX idx_vaga_data ON vaga(data);
+CREATE INDEX idx_vaga_ubs ON vaga(ubs_id);
 CREATE INDEX idx_vaga_disponivel ON vaga(disponivel);
 
 -- Tabela Agendamento
-CREATE TABLE IF NOT EXISTS agendamento (
+CREATE TABLE agendamento (
     id BIGSERIAL PRIMARY KEY,
-    usuario_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
+    paciente_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
     vaga_id BIGINT NOT NULL REFERENCES vaga(id) ON DELETE CASCADE,
-    status VARCHAR(25) NOT NULL DEFAULT 'CONFIRMADO',
-    observacoes TEXT,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_cancelamento TIMESTAMP,
-    motivo_cancelamento VARCHAR(255),
-    CONSTRAINT agendamento_status_chk CHECK (status IN ('CONFIRMADO', 'COMPARECEU', 'NAO_COMPARECEU', 'CANCELADO'))
+    status VARCHAR(20) NOT NULL DEFAULT 'AGENDADO',
+    data_agendamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_confirmacao TIMESTAMP,
+    compareceu BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(vaga_id), -- Uma vaga só pode ter um agendamento
+    CONSTRAINT chk_status_agendamento CHECK (status IN ('AGENDADO', 'CANCELADO', 'COMPARECEU', 'FALTOU'))
 );
 
-CREATE INDEX idx_agendamento_usuario_id ON agendamento(usuario_id);
-CREATE INDEX idx_agendamento_vaga_id ON agendamento(vaga_id);
+CREATE INDEX idx_agendamento_paciente ON agendamento(paciente_id);
 CREATE INDEX idx_agendamento_status ON agendamento(status);
 
--- Tabela Noticia
-CREATE TABLE IF NOT EXISTS noticia (
+-- Tabela Notícia
+CREATE TABLE noticia (
     id BIGSERIAL PRIMARY KEY,
-    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
     titulo VARCHAR(255) NOT NULL,
     conteudo TEXT NOT NULL,
     data_publicacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ativo BOOLEAN NOT NULL DEFAULT true,
-    data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ubs_id BIGINT NOT NULL REFERENCES ubs(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_noticia_ubs_id ON noticia(ubs_id);
-CREATE INDEX idx_noticia_ativo ON noticia(ativo);
-CREATE INDEX idx_noticia_data_publicacao ON noticia(data_publicacao);
+CREATE INDEX idx_noticia_ubs ON noticia(ubs_id);
+CREATE INDEX idx_noticia_data ON noticia(data_publicacao DESC);

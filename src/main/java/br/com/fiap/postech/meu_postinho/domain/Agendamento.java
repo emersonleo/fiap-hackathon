@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@ToString(exclude = {"usuario", "vaga"})
+@ToString(exclude = {"paciente", "vaga"})
 public class Agendamento {
     
     @Id
@@ -20,14 +20,23 @@ public class Agendamento {
     private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
+    @JoinColumn(name = "paciente_id", nullable = false)
+    private Usuario paciente;
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vaga_id", nullable = false)
     private Vaga vaga;
+
+    // Compatibilidade com código existente que usava `usuario`
+    public Usuario getUsuario() {
+        return this.paciente;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.paciente = usuario;
+    }
     
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ConversorStatus.class)
     @Column(name = "status", nullable = false)
     private Status status = Status.CONFIRMADO;
     

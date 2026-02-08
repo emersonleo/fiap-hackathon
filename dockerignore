@@ -1,0 +1,27 @@
+# Ignorar arquivos desnecessários no build
+target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.eclipse/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Não ignorar resources (precisamos dos migrations!)
+!src/main/resources/

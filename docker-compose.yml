@@ -31,8 +31,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/meupostinho
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_FLYWAY_ENABLED: "false"
       APP_JWT_SECRET: ChaveSecretaMuitoComplexaParaOTokenJWTDoProjeto1234567890ProjMeuPostinho
       APP_JWT_EXPIRATION: 86400000
     depends_on:

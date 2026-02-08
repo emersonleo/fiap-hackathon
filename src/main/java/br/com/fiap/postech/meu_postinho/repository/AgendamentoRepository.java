@@ -10,9 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
-    List<Agendamento> findByUsuarioId(Long usuarioId);
+    List<Agendamento> findByPacienteId(Long usuarioId);
     List<Agendamento> findByStatus(Status status);
     Optional<Agendamento> findByVagaIdAndStatus(Long vagaId, Status status);
     List<Agendamento> findByVagaId(Long vagaId);
-    List<Agendamento> findByUsuarioIdAndStatusIn(Long usuarioId, List<Status> statuses);
+    List<Agendamento> findByPacienteIdAndStatusIn(Long usuarioId, List<Status> statuses);
 }
