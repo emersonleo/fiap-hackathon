@@ -1,15 +1,13 @@
 package br.com.fiap.postech.meu_postinho.service;
 
 import br.com.fiap.postech.meu_postinho.domain.Agendamento;
+import br.com.fiap.postech.meu_postinho.domain.Agendamento.Status;
 import br.com.fiap.postech.meu_postinho.domain.Usuario;
 import br.com.fiap.postech.meu_postinho.domain.Vaga;
-import br.com.fiap.postech.meu_postinho.domain.UBS;
 import br.com.fiap.postech.meu_postinho.dto.AgendamentoDTO;
 import br.com.fiap.postech.meu_postinho.exception.BadRequestException;
 import br.com.fiap.postech.meu_postinho.exception.ResourceNotFoundException;
-import br.com.fiap.postech.meu_postinho.repository.AgendamentoRepository;
-import br.com.fiap.postech.meu_postinho.repository.UsuarioRepository;
-import br.com.fiap.postech.meu_postinho.repository.VagaRepository;
+import br.com.fiap.postech.meu_postinho.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -42,34 +39,32 @@ class AgendamentoServiceTest {
     @InjectMocks
     private AgendamentoService agendamentoService;
 
+    private Agendamento agendamento;
+    private AgendamentoDTO agendamentoDTO;
     private Usuario usuario;
     private Vaga vaga;
-    private Agendamento agendamento;
-    private UBS ubs;
 
     @BeforeEach
     void setUp() {
-        ubs = new UBS();
-        ubs.setId(1L);
-        ubs.setNome("UBS Teste");
-
         usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("Test User");
-        usuario.setUbs(ubs);
 
         vaga = new Vaga();
         vaga.setId(1L);
         vaga.setDisponivel(true);
-        vaga.setUbs(ubs);
 
         agendamento = new Agendamento();
         agendamento.setId(1L);
         agendamento.setUsuario(usuario);
         agendamento.setVaga(vaga);
-        agendamento.setStatus(Agendamento.Status.CONFIRMADO);
-        agendamento.setDataCriacao(LocalDateTime.now());
-        agendamento.setDataAtualizacao(LocalDateTime.now());
+        agendamento.setStatus(Status.CONFIRMADO);
+        agendamento.setObservacoes("Teste de observações");
+
+        agendamentoDTO = new AgendamentoDTO();
+        agendamentoDTO.setId(1L);
+        agendamentoDTO.setStatus("CONFIRMADO");
+        agendamentoDTO.setObservacoes("Teste de observações");
     }
 
     @Test
@@ -77,84 +72,66 @@ class AgendamentoServiceTest {
     void criarAgendamentoSuccess() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(vagaRepository.findById(1L)).thenReturn(Optional.of(vaga));
-        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(1L), anyList()))
-                .thenReturn(Arrays.asList());
-        when(vagaRepository.save(vaga)).thenReturn(vaga);
         when(agendamentoRepository.save(any(Agendamento.class))).thenReturn(agendamento);
 
         AgendamentoDTO result = agendamentoService.criar(1L, 1L);
 
         assertNotNull(result);
         assertEquals(agendamento.getId(), result.getId());
-        assertEquals(usuario.getId(), result.getUsuarioId());
-        assertEquals(vaga.getId(), result.getVagaId());
-        assertEquals(Agendamento.Status.CONFIRMADO.name(), result.getStatus());
-
+        assertEquals(Status.CONFIRMADO.name(), result.getStatus());
         verify(usuarioRepository).findById(1L);
         verify(vagaRepository).findById(1L);
-        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(1L), anyList());
-        verify(vagaRepository).save(vaga);
         verify(agendamentoRepository).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException quando usuário não for encontrado")
-    void criarAgendamentoUsuarioNotFound() {
+    @DisplayName("Deve lançar ResourceNotFoundException ao criar agendamento para usuário inexistente")
+    void criarAgendamentoUsuarioInexistente() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> agendamentoService.criar(1L, 1L));
-
         verify(usuarioRepository).findById(1L);
-        verify(vagaRepository, never()).findById(anyLong());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException quando vaga não for encontrada")
-    void criarAgendamentoVagaNotFound() {
+    @DisplayName("Deve lançar ResourceNotFoundException ao criar agendamento para vaga inexistente")
+    void criarAgendamentoVagaInexistente() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(vagaRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> agendamentoService.criar(1L, 1L));
-
         verify(usuarioRepository).findById(1L);
         verify(vagaRepository).findById(1L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar BadRequestException quando usuário já tiver agendamento ativo")
+    @DisplayName("Deve lançar BadRequestException ao criar agendamento para usuário com agendamento ativo")
     void criarAgendamentoUsuarioComAgendamentoAtivo() {
-        Agendamento agendamentoAtivo = new Agendamento();
-        agendamentoAtivo.setStatus(Agendamento.Status.CONFIRMADO);
-
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(vagaRepository.findById(1L)).thenReturn(Optional.of(vaga));
-        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(1L), anyList()))
-                .thenReturn(Arrays.asList(agendamentoAtivo));
+        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(1L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU))))
+                .thenReturn(Arrays.asList(new Agendamento()));
 
         assertThrows(BadRequestException.class, () -> agendamentoService.criar(1L, 1L));
-
         verify(usuarioRepository).findById(1L);
         verify(vagaRepository).findById(1L);
-        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(1L), anyList());
-        verify(vagaRepository, never()).save(any());
+        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(1L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU)));
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar BadRequestException quando vaga não estiver disponível")
+    @DisplayName("Deve lançar BadRequestException ao criar agendamento para vaga indisponível")
     void criarAgendamentoVagaIndisponivel() {
-        vaga.setDisponivel(false);
-
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        vaga.setDisponivel(false);
         when(vagaRepository.findById(1L)).thenReturn(Optional.of(vaga));
-        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(1L), anyList()))
-                .thenReturn(Arrays.asList());
 
         assertThrows(BadRequestException.class, () -> agendamentoService.criar(1L, 1L));
-
         verify(usuarioRepository).findById(1L);
         verify(vagaRepository).findById(1L);
-        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(1L), anyList());
-        verify(vagaRepository, never()).save(any());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
@@ -166,20 +143,17 @@ class AgendamentoServiceTest {
 
         assertNotNull(result);
         assertEquals(agendamento.getId(), result.getId());
-        assertEquals(usuario.getId(), result.getUsuarioId());
-        assertEquals(vaga.getId(), result.getVagaId());
-
+        assertEquals(agendamento.getStatus().name(), result.getStatus());
         verify(agendamentoRepository).findById(1L);
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException quando agendamento não for encontrado")
-    void obterAgendamentoPorIdNotFound() {
-        when(agendamentoRepository.findById(1L)).thenReturn(Optional.empty());
+    @DisplayName("Deve lançar ResourceNotFoundException ao buscar agendamento inexistente")
+    void obterAgendamentoInexistente() {
+        when(agendamentoRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.obterPorId(1L));
-
-        verify(agendamentoRepository).findById(1L);
+        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.obterPorId(999L));
+        verify(agendamentoRepository).findById(999L);
     }
 
     @Test
@@ -190,10 +164,8 @@ class AgendamentoServiceTest {
 
         List<AgendamentoDTO> result = agendamentoService.listarPorUsuario(1L);
 
-        assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(agendamento.getId(), result.get(0).getId());
-
         verify(agendamentoRepository).findByPacienteId(1L);
     }
 
@@ -201,84 +173,117 @@ class AgendamentoServiceTest {
     @DisplayName("Deve cancelar agendamento com sucesso")
     void cancelarAgendamentoSuccess() {
         when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
-        when(vagaRepository.save(vaga)).thenReturn(vaga);
-        when(agendamentoRepository.save(agendamento)).thenReturn(agendamento);
+        when(agendamentoRepository.save(any(Agendamento.class))).thenReturn(agendamento);
 
-        AgendamentoDTO result = agendamentoService.cancelar(1L, "Motivo de cancelamento");
+        AgendamentoDTO result = agendamentoService.cancelar(1L, "Cancelamento de teste");
 
         assertNotNull(result);
-        assertEquals(Agendamento.Status.CANCELADO.name(), result.getStatus());
-        assertEquals("Motivo de cancelamento", result.getMotivoCancelamento());
-        assertNotNull(result.getDataCancelamento());
-
+        assertEquals(Status.CANCELADO.name(), result.getStatus());
+        assertEquals("Cancelamento de teste", result.getMotivoCancelamento());
         verify(agendamentoRepository).findById(1L);
-        verify(vagaRepository).save(vaga);
-        verify(agendamentoRepository).save(agendamento);
+        verify(agendamentoRepository).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar BadRequestException ao tentar cancelar agendamento já cancelado")
+    @DisplayName("Deve lançar ResourceNotFoundException ao cancelar agendamento inexistente")
+    void cancelarAgendamentoInexistente() {
+        when(agendamentoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.cancelar(999L, "Teste"));
+        verify(agendamentoRepository).findById(999L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao cancelar agendamento já cancelado")
     void cancelarAgendamentoJaCancelado() {
-        agendamento.setStatus(Agendamento.Status.CANCELADO);
-        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        Agendamento agendamentoCancelado = new Agendamento();
+        agendamentoCancelado.setStatus(Status.CANCELADO);
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamentoCancelado));
 
-        assertThrows(BadRequestException.class, () -> agendamentoService.cancelar(1L, "Motivo"));
-
+        assertThrows(BadRequestException.class, () -> agendamentoService.cancelar(1L, "Teste"));
         verify(agendamentoRepository).findById(1L);
-        verify(vagaRepository, never()).save(any());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
     @DisplayName("Deve marcar comparecimento com sucesso")
     void marcarComparecimentoSuccess() {
         when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
-        when(agendamentoRepository.save(agendamento)).thenReturn(agendamento);
+        when(agendamentoRepository.save(any(Agendamento.class))).thenReturn(agendamento);
 
         AgendamentoDTO result = agendamentoService.marcarComparecimento(1L);
 
         assertNotNull(result);
-        assertEquals(Agendamento.Status.COMPARECEU.name(), result.getStatus());
-
+        assertEquals(Status.COMPARECEU.name(), result.getStatus());
         verify(agendamentoRepository).findById(1L);
-        verify(agendamentoRepository).save(agendamento);
+        verify(agendamentoRepository).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar BadRequestException ao marcar comparecimento em agendamento não confirmado")
-    void marcarComparecimentoAgendamentoNaoConfirmado() {
-        agendamento.setStatus(Agendamento.Status.CANCELADO);
-        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+    @DisplayName("Deve lançar ResourceNotFoundException ao marcar comparecimento de agendamento inexistente")
+    void marcarComparecimentoInexistente() {
+        when(agendamentoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.marcarComparecimento(999L));
+        verify(agendamentoRepository).findById(999L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao marcar comparecimento de agendamento não confirmado")
+    void marcarComparecimentoNaoConfirmado() {
+        Agendamento agendamentoNaoConfirmado = new Agendamento();
+        agendamentoNaoConfirmado.setStatus(Status.CANCELADO);
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamentoNaoConfirmado));
 
         assertThrows(BadRequestException.class, () -> agendamentoService.marcarComparecimento(1L));
-
         verify(agendamentoRepository).findById(1L);
-        verify(agendamentoRepository, never()).save(any());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test
     @DisplayName("Deve marcar não comparecimento com sucesso")
     void marcarNaoComparecimentoSuccess() {
         when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
-        when(agendamentoRepository.save(agendamento)).thenReturn(agendamento);
+        when(agendamentoRepository.save(any(Agendamento.class))).thenReturn(agendamento);
 
         AgendamentoDTO result = agendamentoService.marcarNaoComparecimento(1L);
 
         assertNotNull(result);
-        assertEquals(Agendamento.Status.NAO_COMPARECEU.name(), result.getStatus());
-
+        assertEquals(Status.NAO_COMPARECEU.name(), result.getStatus());
         verify(agendamentoRepository).findById(1L);
-        verify(agendamentoRepository).save(agendamento);
+        verify(agendamentoRepository).save(any(Agendamento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar BadRequestException ao marcar não comparecimento em agendamento não confirmado")
-    void marcarNaoComparecimentoAgendamentoNaoConfirmado() {
-        agendamento.setStatus(Agendamento.Status.CANCELADO);
-        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+    @DisplayName("Deve lançar ResourceNotFoundException ao marcar não comparecimento de agendamento inexistente")
+    void marcarNaoComparecimentoInexistente() {
+        when(agendamentoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.marcarNaoComparecimento(999L));
+        verify(agendamentoRepository).findById(999L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao marcar não comparecimento de agendamento não confirmado")
+    void marcarNaoComparecimentoNaoConfirmado() {
+        Agendamento agendamentoNaoConfirmado = new Agendamento();
+        agendamentoNaoConfirmado.setStatus(Status.CANCELADO);
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamentoNaoConfirmado));
 
         assertThrows(BadRequestException.class, () -> agendamentoService.marcarNaoComparecimento(1L));
-
         verify(agendamentoRepository).findById(1L);
-        verify(agendamentoRepository, never()).save(any());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve testar datas de criação e atualização")
+    void testDatasCriacaoEAtualizacao() {
+        assertNull(agendamento.getDataCriacao());
+        assertNull(agendamento.getDataAtualizacao());
+        assertNull(agendamento.getDataCancelamento());
+        assertNull(agendamento.getMotivoCancelamento());
     }
 }

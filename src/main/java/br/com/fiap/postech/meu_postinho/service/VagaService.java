@@ -92,7 +92,7 @@ public class VagaService {
         vagaRepository.delete(vaga);
     }
     
-    private VagaDTO converterParaDTO(Vaga vaga) {
+    public VagaDTO converterParaDTO(Vaga vaga) {
         VagaDTO dto = new VagaDTO();
         dto.setId(vaga.getId());
         dto.setUbsId(vaga.getUbs().getId());
