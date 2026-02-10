@@ -55,7 +55,9 @@ public class NoticiaService {
         
         noticia.setTitulo(dto.getTitulo());
         noticia.setConteudo(dto.getConteudo());
-        noticia.setAtivo(dto.getAtivo());
+        if(dto.getAtivo() != null){
+            noticia.setAtivo(dto.getAtivo());
+        }
         
         noticia = noticiaRepository.save(noticia);
         return converterParaDTO(noticia);

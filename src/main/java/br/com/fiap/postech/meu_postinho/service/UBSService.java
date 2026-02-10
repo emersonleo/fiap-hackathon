@@ -68,7 +68,9 @@ public class UBSService {
         ubs.setEstado(ubsDTO.getEstado());
         ubs.setLatitude(ubsDTO.getLatitude());
         ubs.setLongitude(ubsDTO.getLongitude());
-        ubs.setAtiva(ubsDTO.getAtiva());
+        if (ubsDTO.getAtiva() != null) {
+            ubs.setAtiva(ubsDTO.getAtiva());
+        }
         
         ubs = ubsRepository.save(ubs);
         return converterParaDTO(ubs);

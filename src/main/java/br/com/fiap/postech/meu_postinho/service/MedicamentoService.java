@@ -64,7 +64,9 @@ public class MedicamentoService {
         medicamento.setPosologia(medicamentoDTO.getPosologia());
         medicamento.setUnidade(medicamentoDTO.getUnidade());
         medicamento.setCodigoCATMAT(medicamentoDTO.getCodigoCATMAT());
-        medicamento.setAtivo(medicamentoDTO.getAtivo());
+        if (medicamentoDTO.getAtivo() != null) {
+            medicamento.setAtivo(medicamentoDTO.getAtivo());
+        }
         
         medicamento = medicamentoRepository.save(medicamento);
         return converterParaDTO(medicamento);
