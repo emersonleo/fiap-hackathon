@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 
 @Entity
 @DiscriminatorValue("Agente")
@@ -37,7 +38,7 @@ public class Agente extends Usuario {
     public Agente(String cpf, String nome, String telefone, String email, String senha, 
                   String dataNascimento, String endereco, String cep, UBS ubs,
                   String cns, TipoAgente tipo, StatusCNES statusCnes) {
-        super(null, cpf, nome, telefone, email, senha, dataNascimento, endereco, cep, ubs, null, true, null, null, null, null);
+        super(null, cpf, nome, telefone, email, senha, dataNascimento, endereco, cep, ubs, new HashSet<>(), true, null, null, null, null);
         this.cns = cns;
         this.tipo = tipo;
         this.statusCnes = statusCnes;

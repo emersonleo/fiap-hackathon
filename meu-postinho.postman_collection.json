@@ -7,163 +7,10 @@
   },
   "item": [
     {
-      "name": "⚙️ Setup",
-      "item": [
-        {
-          "name": "Setup - Carregar variáveis dinâmicas",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const baseUrl = pm.environment.get('base_url') || pm.collectionVariables.get('base_url');",
-                  "if (!baseUrl) {",
-                  "  throw new Error('base_url não definido no ambiente/collection');",
-                  "}",
-                  "",
-                  "const setIfPresent = (key, value) => {",
-                  "  if (value !== undefined && value !== null && value !== '') pm.environment.set(key, value);",
-                  "};",
-                  "",
-                  "const safeJson = (res) => {",
-                  "  try { return res.json(); } catch (e) { return null; }",
-                  "};",
-                  "",
-                  "const requestJson = (opt) => new Promise((resolve) => {",
-                  "  pm.sendRequest(opt, (err, res) => resolve({ err, res }));",
-                  "});",
-                  "",
-                  "(async () => {",
-                  "  // 1) Descobrir UBS (pública)",
-                  "  const ubsResp = await requestJson({ url: `${baseUrl}/api/ubs`, method: 'GET' });",
-                  "  if (!ubsResp.err && ubsResp.res && ubsResp.res.code === 200) {",
-                  "    const data = safeJson(ubsResp.res);",
-                  "    if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('ubsId', data[0].id);",
-                  "  }",
-                  "",
-                  "  // 2) Login se não houver token",
-                  "  let token = pm.environment.get('token');",
-                  "  if (!token) {",
-                  "    const email = pm.environment.get('setup_email') || 'joao@teste.com';",
-                  "    const senha = pm.environment.get('setup_senha') || 'Senha@123456';",
-                  "    const loginResp = await requestJson({",
-                  "      url: `${baseUrl}/api/auth/login`,",
-                  "      method: 'POST',",
-                  "      header: { 'Content-Type': 'application/json' },",
-                  "      body: { mode: 'raw', raw: JSON.stringify({ email, senha }) }",
-                  "    });",
-                  "    if (!loginResp.err && loginResp.res && loginResp.res.code === 200) {",
-                  "      const data = safeJson(loginResp.res) || {};",
-                  "      setIfPresent('token', data.token);",
-                  "      setIfPresent('userId', data.id);",
-                  "      setIfPresent('ubsId', data.ubsId || pm.environment.get('ubsId'));",
-                  "      token = data.token;",
-                  "    }",
-                  "  }",
-                  "",
-                  "  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};",
-                  "  const ubsId = pm.environment.get('ubsId');",
-                  "  const userId = pm.environment.get('userId');",
-                  "",
-                  "  // 3) Medicamentos (autenticado)",
-                  "  const medResp = await requestJson({ url: `${baseUrl}/api/medicamentos`, method: 'GET', header: authHeader });",
-                  "  if (!medResp.err && medResp.res && medResp.res.code === 200) {",
-                  "    const data = safeJson(medResp.res);",
-                  "    if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('medicamentoId', data[0].id);",
-                  "  }",
-                  "",
-                  "  // 4) Vagas por UBS (AGENTE). Se falhar por role, segue adiante.",
-                  "  if (ubsId) {",
-                  "    const vagaResp = await requestJson({ url: `${baseUrl}/api/vagas/ubs/${ubsId}`, method: 'GET', header: authHeader });",
-                  "    if (!vagaResp.err && vagaResp.res && vagaResp.res.code === 200) {",
-                  "      const data = safeJson(vagaResp.res);",
-                  "      if (Array.isArray(data) && data.length > 0) {",
-                  "        const first = data.find(v => v && v.disponivel) || data[0];",
-                  "        if (first && first.id) setIfPresent('vagaId', first.id);",
-                  "      }",
-                  "    }",
-                  "  }",
-                  "",
-                  "  // 5) Estoques por UBS (AGENTE)",
-                  "  if (ubsId) {",
-                  "    const estResp = await requestJson({ url: `${baseUrl}/api/estoques/ubs/${ubsId}`, method: 'GET', header: authHeader });",
-                  "    if (!estResp.err && estResp.res && estResp.res.code === 200) {",
-                  "      const data = safeJson(estResp.res);",
-                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('estoqueId', data[0].id);",
-                  "    }",
-                  "  }",
-                  "",
-                  "  // 6) Solicitações do usuário (MORADOR)",
-                  "  if (userId) {",
-                  "    const solResp = await requestJson({ url: `${baseUrl}/api/solicitacoes/usuario/${userId}`, method: 'GET', header: authHeader });",
-                  "    if (!solResp.err && solResp.res && solResp.res.code === 200) {",
-                  "      const data = safeJson(solResp.res);",
-                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('solicitacaoId', data[0].id);",
-                  "    }",
-                  "  }",
-                  "",
-                  "  // 7) Meus agendamentos (MORADOR)",
-                  "  if (userId) {",
-                  "    const agResp = await requestJson({ url: `${baseUrl}/api/agendamentos/meus?usuarioId=${userId}`, method: 'GET', header: authHeader });",
-                  "    if (!agResp.err && agResp.res && agResp.res.code === 200) {",
-                  "      const data = safeJson(agResp.res);",
-                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('agendamentoId', data[0].id);",
-                  "    }",
-                  "  }",
-                  "",
-                  "  // 8) Notícias por UBS (pública)",
-                  "  if (ubsId) {",
-                  "    const notResp = await requestJson({ url: `${baseUrl}/api/noticias/ubs/${ubsId}`, method: 'GET' });",
-                  "    if (!notResp.err && notResp.res && notResp.res.code === 200) {",
-                  "      const data = safeJson(notResp.res);",
-                  "      if (Array.isArray(data) && data.length > 0 && data[0].id) setIfPresent('noticiaId', data[0].id);",
-                  "    }",
-                  "  }",
-                  "",
-                  "  pm.test('Setup executado', function () { pm.expect(true).to.eql(true); });",
-                  "})();"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/ubs",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "ubs"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "🔐 Autenticação",
       "item": [
         {
           "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('token', jsonData.token);",
-                  "    pm.environment.set('userId', jsonData.id);",
-                  "    pm.environment.set('ubsId', jsonData.ubsId);",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -177,9 +24,9 @@
               "raw": "{\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/auth/login",
+              "raw": "http://localhost:8080/api/auth/login",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -218,44 +65,6 @@
         },
         {
           "name": "Registrar Morador",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "const pad = (n, w) => String(n).padStart(w, '0');",
-                  "const now = Date.now();",
-                  "const suffix = pad(now % 1000000, 6);",
-                  "const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;",
-                  "const calcCpfDigit = (base, factor) => {",
-                  "  let total = 0;",
-                  "  for (let i = 0; i < base.length; i++) {",
-                  "    total += parseInt(base.charAt(i), 10) * (factor - i);",
-                  "  }",
-                  "  const mod = total % 11;",
-                  "  return (mod < 2) ? 0 : (11 - mod);",
-                  "};",
-                  "const genCpf = () => {",
-                  "  // gera 9 dígitos base e calcula os 2 verificadores (CPF válido)",
-                  "  let base = '';",
-                  "  for (let i = 0; i < 9; i++) base += String(randInt(0, 9));",
-                  "  // evita CPFs com todos dígitos iguais (ex: 000000000)",
-                  "  if (/^(\\d)\\1{8}$/.test(base)) base = '123456789';",
-                  "  const d1 = calcCpfDigit(base, 10);",
-                  "  const d2 = calcCpfDigit(base + String(d1), 11);",
-                  "  return base + String(d1) + String(d2);",
-                  "};",
-                  "const cpf = genCpf();",
-                  "const telefone = `(11) 9${suffix.slice(0, 4)}-${suffix.slice(4, 8).padEnd(4, '0')}`;",
-                  "const email = `morador_${suffix}@teste.com`;",
-                  "pm.environment.set('register_cpf', cpf);",
-                  "pm.environment.set('register_telefone', telefone);",
-                  "pm.environment.set('register_email', email);",
-                  "pm.environment.set('register_senha', 'Senha@123456');"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -266,12 +75,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"{{register_cpf}}\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"{{register_telefone}}\",\n  \"email\": \"{{register_email}}\",\n  \"senha\": \"{{register_senha}}\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": {{ubsId}}\n}"
+              "raw": "{\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"(11) 91234-5678\",\n  \"email\": \"joao.silva@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": 1\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/auth/register",
+              "raw": "http://localhost:8080/api/auth/register",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -293,12 +102,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"endereco\": \"Av. da Saúde, 500\",\n  \"cep\": \"01310-100\",\n  \"tipo\": \"ACS\",\n  \"ubsId\": {{ubsId}}\n}"
+              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1985-05-20\",\n  \"endereco\": \"Av. da Saúde, 500\",\n  \"cep\": \"01310-100\",\n  \"tipo\": \"ACS\",\n  \"ubsId\": 1\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/agentes",
+              "raw": "http://localhost:8080/api/agentes",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -314,28 +123,13 @@
       "item": [
         {
           "name": "Listar Todas UBS",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (!pm.environment.get('ubsId') && Array.isArray(data) && data.length > 0 && data[0].id) {",
-                  "    pm.environment.set('ubsId', data[0].id);",
-                  "  }",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/ubs",
+              "raw": "http://localhost:8080/api/ubs",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -350,14 +144,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/ubs/{{ubsId}}",
+              "raw": "http://localhost:8080/api/ubs/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "ubs",
-                "{{ubsId}}"
+                "1"
               ]
             }
           }
@@ -373,17 +167,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"UBS Nova Esperança\",\n  \"codigoCNES\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Nova Esperança\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/ubs",
+              "raw": "http://localhost:8080/api/ubs",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -403,22 +197,22 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"codigoCNES\": \"3509507\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-1111\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-1111\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/ubs/{{ubsId}}",
+              "raw": "http://localhost:8080/api/ubs/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "ubs",
-                "{{ubsId}}"
+                "1"
               ]
             }
           }
@@ -430,13 +224,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/ubs/importar?codigoMunicipio=3550308",
+              "raw": "http://localhost:8080/api/ubs/importar?codigoMunicipio=3550308",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -464,13 +258,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/disponiveis",
+              "raw": "http://localhost:8080/api/medicamentos/disponiveis",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -482,33 +276,18 @@
         },
         {
           "name": "Listar Todos Medicamentos",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (!pm.environment.get('medicamentoId') && Array.isArray(data) && data.length > 0 && data[0].id) {",
-                  "    pm.environment.set('medicamentoId', data[0].id);",
-                  "  }",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos",
+              "raw": "http://localhost:8080/api/medicamentos",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -524,19 +303,19 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/categoria/ANALGÉSICO",
+              "raw": "http://localhost:8080/api/medicamentos/categoria/Analgésico",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "medicamentos",
                 "categoria",
-                "ANALGÉSICO"
+                "Analgésico"
               ]
             }
           }
@@ -548,18 +327,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
+              "raw": "http://localhost:8080/api/medicamentos/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "{{medicamentoId}}"
+                "1"
               ]
             }
           }
@@ -575,17 +354,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"codigoCATMAT\": \"123ABC45\",\n  \"ativo\": true\n}"
+              "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"Analgésico\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"comprimido\",\n  \"codigoCatmat\": \"123ABC45\",\n  \"ativo\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/medicamentos",
+              "raw": "http://localhost:8080/api/medicamentos",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -605,22 +384,22 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"ANALGÉSICO\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\",\n  \"unidade\": \"COMPRIMIDO\",\n  \"ativo\": true\n}"
+              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"Analgésico\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\",\n  \"unidade\": \"comprimido\",\n  \"ativo\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
+              "raw": "http://localhost:8080/api/medicamentos/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "{{medicamentoId}}"
+                "1"
               ]
             }
           }
@@ -632,18 +411,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/medicamentos/{{medicamentoId}}",
+              "raw": "http://localhost:8080/api/medicamentos/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "{{medicamentoId}}"
+                "1"
               ]
             }
           }
@@ -655,19 +434,6 @@
       "item": [
         {
           "name": "Criar Estoque (Agente)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (data && data.id) pm.environment.set('estoqueId', data.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -677,17 +443,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01T00:00:00\",\n  \"dataVencimento\": \"2027-02-01T00:00:00\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01T00:00:00\",\n  \"dataVencimento\": \"2027-02-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/estoques",
+              "raw": "http://localhost:8080/api/estoques",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -703,19 +469,19 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/ubs/{{ubsId}}",
+              "raw": "http://localhost:8080/api/estoques/ubs/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "estoques",
                 "ubs",
-                "{{ubsId}}"
+                "1"
               ]
             }
           }
@@ -727,18 +493,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
+              "raw": "http://localhost:8080/api/estoques/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "estoques",
-                "{{estoqueId}}"
+                "1"
               ]
             }
           }
@@ -754,22 +520,22 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01T00:00:00\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
+              "raw": "http://localhost:8080/api/estoques/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "estoques",
-                "{{estoqueId}}"
+                "1"
               ]
             }
           }
@@ -781,18 +547,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/{{estoqueId}}/quantidade?novaQuantidade=80",
+              "raw": "http://localhost:8080/api/estoques/1/quantidade?novaQuantidade=80",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "estoques",
-                "{{estoqueId}}",
+                "1",
                 "quantidade"
               ],
               "query": [
@@ -811,18 +577,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estoques/{{estoqueId}}",
+              "raw": "http://localhost:8080/api/estoques/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "estoques",
-                "{{estoqueId}}"
+                "1"
               ]
             }
           }
@@ -834,19 +600,6 @@
       "item": [
         {
           "name": "Criar Solicitação (Morador)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (data && data.id) pm.environment.set('solicitacaoId', data.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -856,17 +609,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": {{userId}},\n  \"medicamentoId\": {{medicamentoId}},\n  \"ubsId\": {{ubsId}},\n  \"quantidade\": 2\n}"
+              "raw": "{\n  \"usuarioId\": 1,\n  \"medicamentoId\": 1,\n  \"ubsId\": 1,\n  \"quantidade\": 2\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes",
+              "raw": "http://localhost:8080/api/solicitacoes",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -882,18 +635,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}",
+              "raw": "http://localhost:8080/api/solicitacoes/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "{{solicitacaoId}}"
+                "1"
               ]
             }
           }
@@ -905,19 +658,19 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/usuario/{{userId}}",
+              "raw": "http://localhost:8080/api/solicitacoes/usuario/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "solicitacoes",
                 "usuario",
-                "{{userId}}"
+                "1"
               ]
             }
           }
@@ -929,19 +682,19 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/ubs/{{ubsId}}/pendentes",
+              "raw": "http://localhost:8080/api/solicitacoes/ubs/1/pendentes",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "solicitacoes",
                 "ubs",
-                "{{ubsId}}",
+                "1",
                 "pendentes"
               ]
             }
@@ -954,18 +707,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}/aceitar",
+              "raw": "http://localhost:8080/api/solicitacoes/1/aceitar",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "{{solicitacaoId}}",
+                "1",
                 "aceitar"
               ]
             }
@@ -978,18 +731,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/solicitacoes/{{solicitacaoId}}/recusar?justificativa=Medicamento%20fora%20de%20estoque",
+              "raw": "http://localhost:8080/api/solicitacoes/1/recusar?justificativa=Medicamento%20fora%20de%20estoque",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "{{solicitacaoId}}",
+                "1",
                 "recusar"
               ],
               "query": [
@@ -1017,17 +770,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"09:30\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/vagas",
+              "raw": "http://localhost:8080/api/vagas",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1038,40 +791,24 @@
         },
         {
           "name": "Listar Vagas por UBS (Agente)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  const first = Array.isArray(data) ? data.find(v => v && v.disponivel) || data[0] : null;",
-                  "  if (first && first.id) {",
-                  "    pm.environment.set('vagaId', first.id);",
-                  "  }",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/ubs/{{ubsId}}",
+              "raw": "http://localhost:8080/api/vagas/ubs/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "vagas",
                 "ubs",
-                "{{ubsId}}"
+                "1"
               ]
             }
           }
@@ -1083,13 +820,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/disponiveis?ubsId={{ubsId}}&data=2025-02-15&especialidade=Clínica Geral",
+              "raw": "http://localhost:8080/api/vagas/disponiveis?ubsId=1&data=2025-02-15&especialidade=Clínica Geral",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1099,7 +836,7 @@
               "query": [
                 {
                   "key": "ubsId",
-                  "value": "{{ubsId}}"
+                  "value": "1"
                 },
                 {
                   "key": "data",
@@ -1120,18 +857,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
+              "raw": "http://localhost:8080/api/vagas/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "vagas",
-                "{{vagaId}}"
+                "1"
               ]
             }
           }
@@ -1147,22 +884,22 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFim\": \"09:30:00\",\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"09:30\",\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
+              "raw": "http://localhost:8080/api/vagas/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "vagas",
-                "{{vagaId}}"
+                "1"
               ]
             }
           }
@@ -1174,18 +911,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vagas/{{vagaId}}",
+              "raw": "http://localhost:8080/api/vagas/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "vagas",
-                "{{vagaId}}"
+                "1"
               ]
             }
           }
@@ -1197,32 +934,18 @@
       "item": [
         {
           "name": "Agendar Consulta (Morador)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (data && data.id) pm.environment.set('agendamentoId', data.id);",
-                  "}",
-                  ""
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos?usuarioId={{userId}}&vagaId={{vagaId}}",
+              "raw": "http://localhost:8080/api/agendamentos?usuarioId=1&vagaId=1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1231,11 +954,11 @@
               "query": [
                 {
                   "key": "usuarioId",
-                  "value": "{{userId}}"
+                  "value": "1"
                 },
                 {
                   "key": "vagaId",
-                  "value": "{{vagaId}}"
+                  "value": "1"
                 }
               ]
             }
@@ -1248,18 +971,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}",
+              "raw": "http://localhost:8080/api/agendamentos/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "{{agendamentoId}}"
+                "1"
               ]
             }
           }
@@ -1271,13 +994,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/meus?usuarioId={{userId}}",
+              "raw": "http://localhost:8080/api/agendamentos/meus?usuarioId=1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1287,7 +1010,7 @@
               "query": [
                 {
                   "key": "usuarioId",
-                  "value": "{{userId}}"
+                  "value": "1"
                 }
               ]
             }
@@ -1300,18 +1023,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}?motivoCancelamento=Não%20posso%20comparecer",
+              "raw": "http://localhost:8080/api/agendamentos/1?motivoCancelamento=N%C3%A3o%20posso%20comparecer",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "{{agendamentoId}}"
+                "1"
               ],
               "query": [
                 {
@@ -1329,18 +1052,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}/comparecimento",
+              "raw": "http://localhost:8080/api/agendamentos/1/comparecimento",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "{{agendamentoId}}",
+                "1",
                 "comparecimento"
               ]
             }
@@ -1353,18 +1076,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/agendamentos/{{agendamentoId}}/nao-comparecimento",
+              "raw": "http://localhost:8080/api/agendamentos/1/nao-comparecimento",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "{{agendamentoId}}",
+                "1",
                 "nao-comparecimento"
               ]
             }
@@ -1377,19 +1100,6 @@
       "item": [
         {
           "name": "Criar Notícia (Agente)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "  const data = pm.response.json();",
-                  "  if (data && data.id) pm.environment.set('noticiaId', data.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1399,17 +1109,17 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01T00:00:00\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/noticias",
+              "raw": "http://localhost:8080/api/noticias",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1425,18 +1135,18 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
+              "raw": "http://localhost:8080/api/noticias/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "noticias",
-                "{{noticiaId}}"
+                "1"
               ]
             }
           }
@@ -1448,13 +1158,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/minhas?ubsId={{ubsId}}",
+              "raw": "http://localhost:8080/api/noticias/minhas?ubsId=1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
@@ -1464,7 +1174,7 @@
               "query": [
                 {
                   "key": "ubsId",
-                  "value": "{{ubsId}}"
+                  "value": "1"
                 }
               ]
             }
@@ -1476,15 +1186,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/noticias/ubs/{{ubsId}}",
+              "raw": "http://localhost:8080/api/noticias/ubs/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "noticias",
                 "ubs",
-                "{{ubsId}}"
+                "1"
               ]
             }
           }
@@ -1500,22 +1210,22 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": {{ubsId}},\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
+              "raw": "http://localhost:8080/api/noticias/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "noticias",
-                "{{noticiaId}}"
+                "1"
               ]
             }
           }
@@ -1527,97 +1237,23 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/noticias/{{noticiaId}}",
+              "raw": "http://localhost:8080/api/noticias/1",
               "host": [
-                "{{base_url}}"
+                "http://localhost:8080"
               ],
               "path": [
                 "api",
                 "noticias",
-                "{{noticiaId}}"
+                "1"
               ]
             }
           }
         }
       ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Configurar variáveis iniciais",
-          "pm.environment.set('base_url', 'http://localhost:8080');"
-        ]
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "setup_email",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "setup_senha",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "userId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "ubsId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "medicamentoId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "vagaId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "agendamentoId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "estoqueId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "solicitacaoId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "noticiaId",
-      "value": "",
-      "type": "string"
     }
   ]
 }
