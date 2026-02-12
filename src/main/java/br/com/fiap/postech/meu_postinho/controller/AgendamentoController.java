@@ -46,6 +46,22 @@ public class AgendamentoController {
             @RequestParam(required = false) String motivoCancelamento) {
         return ResponseEntity.ok(agendamentoService.cancelar(id, motivoCancelamento));
     }
+
+    @PutMapping("/{id}/confirmacao")
+    @Operation(summary = "Confirmar ou desistir do agendamento", description = "Paciente confirma presença (CONFIRMAR) ou desiste (DESISTIR)")
+    public ResponseEntity<AgendamentoDTO> confirmarOuDesistir(
+            @PathVariable Long id,
+            @RequestParam String acao) {
+        return ResponseEntity.ok(agendamentoService.confirmarOuDesistir(id, acao));
+    }
+
+    @PostMapping("/{id}/remanejamento")
+    @Operation(summary = "Remanejar agendamento", description = "Cancela o agendamento atual e remaneja a mesma vaga para outro usuário em transação única")
+    public ResponseEntity<AgendamentoDTO> remanejar(
+            @PathVariable Long id,
+            @RequestParam Long novoUsuarioId) {
+        return ResponseEntity.ok(agendamentoService.remanejar(id, novoUsuarioId));
+    }
     
     @PutMapping("/{id}/comparecimento")
     @Operation(summary = "Marcar comparecimento", description = "Marca um agendamento como comparecimento")
