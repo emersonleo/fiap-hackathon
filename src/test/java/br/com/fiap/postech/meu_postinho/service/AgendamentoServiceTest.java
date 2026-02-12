@@ -42,6 +42,7 @@ class AgendamentoServiceTest {
     private Agendamento agendamento;
     private AgendamentoDTO agendamentoDTO;
     private Usuario usuario;
+    private Usuario novoUsuario;
     private Vaga vaga;
 
     @BeforeEach
@@ -49,6 +50,10 @@ class AgendamentoServiceTest {
         usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("Test User");
+
+        novoUsuario = new Usuario();
+        novoUsuario.setId(2L);
+        novoUsuario.setNome("Novo Usuário");
 
         vaga = new Vaga();
         vaga.setId(1L);
@@ -182,6 +187,150 @@ class AgendamentoServiceTest {
         assertEquals("Cancelamento de teste", result.getMotivoCancelamento());
         verify(agendamentoRepository).findById(1L);
         verify(agendamentoRepository).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve confirmar agendamento quando ação for CONFIRMAR")
+    void confirmarOuDesistirConfirmarSuccess() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+
+        AgendamentoDTO result = agendamentoService.confirmarOuDesistir(1L, "CONFIRMAR");
+
+        assertNotNull(result);
+        assertEquals(Status.CONFIRMADO.name(), result.getStatus());
+        verify(agendamentoRepository).findById(1L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve cancelar e liberar vaga quando ação de confirmação for DESISTIR")
+    void confirmarOuDesistirDesistirSuccess() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        when(agendamentoRepository.save(any(Agendamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AgendamentoDTO result = agendamentoService.confirmarOuDesistir(1L, "DESISTIR");
+
+        assertNotNull(result);
+        assertEquals(Status.CANCELADO.name(), result.getStatus());
+        assertEquals("Desistência informada pelo paciente", result.getMotivoCancelamento());
+        assertTrue(vaga.getDisponivel());
+        verify(agendamentoRepository, times(2)).findById(1L);
+        verify(vagaRepository).save(any(Vaga.class));
+        verify(agendamentoRepository).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao confirmar com ação inválida")
+    void confirmarOuDesistirAcaoInvalida() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+
+        assertThrows(BadRequestException.class, () -> agendamentoService.confirmarOuDesistir(1L, "TALVEZ"));
+        verify(agendamentoRepository).findById(1L);
+        verify(vagaRepository, never()).save(any(Vaga.class));
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve remanejar agendamento para novo usuário com sucesso")
+    void remanejarSuccess() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(novoUsuario));
+        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU))))
+                .thenReturn(List.of());
+        when(agendamentoRepository.save(any(Agendamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AgendamentoDTO result = agendamentoService.remanejar(1L, 2L);
+
+        assertNotNull(result);
+        assertEquals(2L, result.getUsuarioId());
+        assertEquals(Status.CONFIRMADO.name(), result.getStatus());
+        assertFalse(vaga.getDisponivel());
+        assertTrue(result.getObservacoes().contains("Remanejado do usuário 1 para 2"));
+        verify(agendamentoRepository, times(3)).findById(1L);
+        verify(usuarioRepository).findById(2L);
+        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU)));
+        verify(vagaRepository, times(2)).save(any(Vaga.class));
+        verify(agendamentoRepository, times(2)).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao remanejar para o mesmo usuário")
+    void remanejarMesmoUsuario() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+
+        assertThrows(BadRequestException.class, () -> agendamentoService.remanejar(1L, 1L));
+        verify(agendamentoRepository).findById(1L);
+        verify(usuarioRepository, never()).findById(anyLong());
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao remanejar para usuário inexistente")
+    void remanejarUsuarioInexistente() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> agendamentoService.remanejar(1L, 2L));
+        verify(agendamentoRepository).findById(1L);
+        verify(usuarioRepository).findById(2L);
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao remanejar para usuário com agendamento ativo")
+    void remanejarUsuarioComAgendamentoAtivo() {
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(novoUsuario));
+        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU))))
+                .thenReturn(List.of(new Agendamento()));
+
+        assertThrows(BadRequestException.class, () -> agendamentoService.remanejar(1L, 2L));
+        verify(agendamentoRepository).findById(1L);
+        verify(usuarioRepository).findById(2L);
+        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU)));
+        verify(vagaRepository, never()).save(any(Vaga.class));
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve remanejar agendamento cancelado com sucesso")
+    void remanejarAgendamentoCanceladoSuccess() {
+        agendamento.setStatus(Status.CANCELADO);
+        agendamento.setMotivoCancelamento("Desistência informada pelo paciente");
+        vaga.setDisponivel(true);
+
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(novoUsuario));
+        when(agendamentoRepository.findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU))))
+                .thenReturn(List.of());
+        when(agendamentoRepository.save(any(Agendamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AgendamentoDTO result = agendamentoService.remanejar(1L, 2L);
+
+        assertNotNull(result);
+        assertEquals(2L, result.getUsuarioId());
+        assertEquals(Status.CONFIRMADO.name(), result.getStatus());
+        assertFalse(vaga.getDisponivel());
+        assertNull(result.getMotivoCancelamento());
+        assertNull(result.getDataCancelamento());
+        verify(agendamentoRepository).findById(1L);
+        verify(usuarioRepository).findById(2L);
+        verify(agendamentoRepository).findByPacienteIdAndStatusIn(eq(2L), eq(Arrays.asList(Status.CONFIRMADO, Status.COMPARECEU)));
+        verify(vagaRepository).save(any(Vaga.class));
+        verify(agendamentoRepository).save(any(Agendamento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequestException ao remanejar agendamento com status não permitido")
+    void remanejarStatusNaoPermitido() {
+        agendamento.setStatus(Status.COMPARECEU);
+        when(agendamentoRepository.findById(1L)).thenReturn(Optional.of(agendamento));
+
+        assertThrows(BadRequestException.class, () -> agendamentoService.remanejar(1L, 2L));
+        verify(agendamentoRepository).findById(1L);
+        verify(usuarioRepository, never()).findById(anyLong());
+        verify(vagaRepository, never()).save(any(Vaga.class));
+        verify(agendamentoRepository, never()).save(any(Agendamento.class));
     }
 
     @Test

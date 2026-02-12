@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/agendamentos/meus").hasRole("MORADOR")
                         .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("MORADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/agendamentos/**").hasRole("MORADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/*/confirmacao").hasRole("MORADOR")
                         .requestMatchers(HttpMethod.GET, "/api/noticias/minhas").hasRole("MORADOR")
                         
                         // Agente endpoints
@@ -75,6 +76,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/vagas/**").hasRole("AGENTE")
                         .requestMatchers(HttpMethod.DELETE, "/api/vagas/**").hasRole("AGENTE")
                         .requestMatchers(HttpMethod.GET, "/api/vagas/**").hasRole("AGENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/agendamentos/*/remanejamento").hasRole("AGENTE")
                         .requestMatchers(HttpMethod.PUT, "/api/solicitacoes/**").hasRole("AGENTE")
                         .requestMatchers(HttpMethod.POST, "/api/noticias").hasRole("AGENTE")
                         .requestMatchers(HttpMethod.PUT, "/api/noticias/**").hasRole("AGENTE")
