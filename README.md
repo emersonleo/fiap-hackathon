@@ -28,11 +28,6 @@ Plataforma inovadora para otimizar o atendimento em Unidades Básicas de Saúde 
 - ✅ Validação CPF + CNS via CNES
 - ✅ Publicar notícias/comunicados
 
-### Para Administradores (ROLE_ADMIN)
-- ✅ Importar UBS via CNES
-- ✅ Gerenciar catálogo de medicamentos
-
----
 
 ## 🛠️ Stack Tecnológico
 
@@ -118,7 +113,6 @@ GET    /api/agentes/{id}           # Obter agente
 ```
 GET    /api/ubs                    # Listar todas
 GET    /api/ubs/{id}               # Obter por ID
-POST   /api/ubs/importar           # Importar via CNES (Admin)
 ```
 
 #### 💊 Medicamentos
@@ -134,7 +128,6 @@ POST   /api/medicamentos                # Criar (Admin/Agente)
 POST   /api/estoques               # Criar estoque (Agente)
 GET    /api/estoques/ubs/{ubsId}   # Listar por UBS (Agente)
 PUT    /api/estoques/{id}          # Atualizar (Agente)
-PUT    /api/estoques/{id}/quantidade  # Atualizar quantidade
 DELETE /api/estoques/{id}          # Deletar (Agente)
 ```
 

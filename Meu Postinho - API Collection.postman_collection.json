@@ -1,9 +1,10 @@
 {
   "info": {
-    "_postman_id": "meu-postinho-api",
+    "_postman_id": "27813619-6845-4609-97d1-b0a8f0c272ef",
     "name": "Meu Postinho - API Collection",
     "description": "Coleção completa de endpoints para o sistema Meu Postinho (SUS Healthcare Optimization)",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "3395850"
   },
   "item": [
     {
@@ -21,12 +22,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"joao@teste.com\",\n  \"senha\": \"Senha@123456\"\n}"
+              "raw": "{\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/auth/login",
+              "raw": "{{baseURL}}/api/auth/login",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -59,6 +60,7 @@
               },
               "_postman_previewlanguage": "json",
               "header": [],
+              "cookie": [],
               "body": "{\n  \"token\": \"eyJhbGciOiJIUzUxMiJ9...\",\n  \"type\": \"Bearer\",\n  \"id\": 1,\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"email\": \"joao@teste.com\",\n  \"role\": \"ROLE_MORADOR\",\n  \"ubsId\": 1\n}"
             }
           ]
@@ -75,12 +77,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"12345678901\",\n  \"nome\": \"João Silva\",\n  \"telefone\": \"(11) 91234-5678\",\n  \"email\": \"joao.silva@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": 1\n}"
+              "raw": "{\n  \"cpf\": \"01234567890\",\n  \"nome\": \"Teste Silva\",\n  \"telefone\": \"(11) 92234-5678\",\n  \"email\": \"teste.silva@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1990-01-15\",\n  \"endereco\": \"Rua A, 123\",\n  \"cep\": \"01310-100\",\n  \"ubsId\": 1\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/auth/register",
+              "raw": "{{baseURL}}/api/auth/register",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -88,7 +90,8 @@
                 "register"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Registrar Agente (CNES)",
@@ -102,19 +105,20 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1985-05-20\",\n  \"endereco\": \"Av. da Saúde, 500\",\n  \"cep\": \"01310-100\",\n  \"tipo\": \"ACS\",\n  \"ubsId\": 1\n}"
+              "raw": "{\n  \"cpf\": \"98765432100\",\n  \"cns\": \"123456789012345\",\n  \"nome\": \"Maria Enfermeira\",\n  \"telefone\": \"(11) 99876-5432\",\n  \"email\": \"maria@teste.com\",\n  \"senha\": \"Senha@123456\",\n  \"dataNascimento\": \"1985-05-20\",\n  \"endereco\": \"Av. da Saúde, 500\",\n  \"cep\": \"01310100\",\n  \"tipo\": \"ACS\",\n  \"ubsId\": 1\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/agentes",
+              "raw": "{{baseURL}}/api/agentes",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "agentes"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -124,19 +128,30 @@
         {
           "name": "Listar Todas UBS",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/ubs",
+              "raw": "{{baseURL}}/api/ubs",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "ubs"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter UBS por ID",
@@ -144,21 +159,32 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/ubs/1",
+              "raw": "{{baseURL}}/api/ubs/12",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "ubs",
-                "1"
+                "12"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Criar Nova UBS",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -172,23 +198,34 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Nova Esperança\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Nova Esperança Teste\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/ubs",
+              "raw": "{{baseURL}}/api/ubs",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "ubs"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Atualizar UBS",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiUk9MRV9BR0VOVEUiLCJjcGYiOiI5ODc2NTQzMjEwMCIsIm5vbWUiOiJNYXJpYSBFbmZlcm1laXJhIiwidXNlcklkIjoxLCJ1YnNJZCI6MSwic3ViIjoibWFyaWFAdGVzdGUuY29tIiwiaWF0IjoxNzcwNjg1MzEwLCJleHAiOjE3NzA3NzE3MTB9.6HbVOvWgSD1p4PcZEhcBpFxTROOy7axIDzXI6ZYtrl4Tuti1coQiDvRs56XneU4g7EZNCm0-j0Xpv-uZV6_evQ",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -202,49 +239,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Parque São Vicente - Atualizada\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-1111\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+              "raw": "{\n  \"codigoCnes\": \"3509507\",\n  \"nome\": \"UBS Nova Esperança Atualizada\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"cep\": \"01311-100\",\n  \"telefone\": \"(11) 3300-0000\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/ubs/1",
+              "raw": "{{baseURL}}/api/ubs/12",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "ubs",
-                "1"
+                "12"
               ]
             }
-          }
-        },
-        {
-          "name": "Importar UBS via CNES (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
-              }
-            ],
-            "url": {
-              "raw": "http://localhost:8080/api/ubs/importar?codigoMunicipio=3550308",
-              "host": [
-                "http://localhost:8080"
-              ],
-              "path": [
-                "api",
-                "ubs",
-                "importar"
-              ],
-              "query": [
-                {
-                  "key": "codigoMunicipio",
-                  "value": "3550308"
-                }
-              ]
-            }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -254,6 +263,16 @@
         {
           "name": "Listar Medicamentos Disponíveis",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -262,9 +281,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos/disponiveis",
+              "raw": "{{baseURL}}/api/medicamentos/disponiveis",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -272,11 +291,22 @@
                 "disponiveis"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Todos Medicamentos",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -285,20 +315,31 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos",
+              "raw": "{{baseURL}}/api/medicamentos",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "medicamentos"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar por Categoria",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -307,22 +348,33 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos/categoria/Analgésico",
+              "raw": "{{baseURL}}/api/medicamentos/categoria/Diuretico",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
                 "categoria",
-                "Analgésico"
+                "Diuretico"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Medicamento por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -331,22 +383,74 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos/1",
+              "raw": "{{baseURL}}/api/medicamentos/3",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "1"
+                "3"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Criar Medicamento",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dipirona 1000mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"Analgésico\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"comprimido\",\n  \"codigoCatmat\": \"123ABC45\",\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/medicamentos",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "medicamentos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Medicamento",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
@@ -362,51 +466,32 @@
               "raw": "{\n  \"nome\": \"Dipirona 500mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"Analgésico\",\n  \"posologia\": \"1 comprimido a cada 6 horas\",\n  \"unidade\": \"comprimido\",\n  \"codigoCatmat\": \"123ABC45\",\n  \"ativo\": true\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos",
+              "raw": "{{baseURL}}/api/medicamentos/22",
               "host": [
-                "http://localhost:8080"
-              ],
-              "path": [
-                "api",
-                "medicamentos"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Atualizar Medicamento",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Paracetamol 750mg\",\n  \"descricao\": \"Analgésico e antitérmico\",\n  \"categoria\": \"Analgésico\",\n  \"posologia\": \"1 a 2 comprimidos a cada 6-8 horas\",\n  \"unidade\": \"comprimido\",\n  \"ativo\": true\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8080/api/medicamentos/1",
-              "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "1"
+                "22"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Deletar Medicamento",
+          "name": "Desabilitar Medicamento",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -415,17 +500,18 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/medicamentos/1",
+              "raw": "{{baseURL}}/api/medicamentos/22",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "medicamentos",
-                "1"
+                "22"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -435,6 +521,16 @@
         {
           "name": "Criar Estoque (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -448,23 +544,34 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01T00:00:00\",\n  \"dataVencimento\": \"2027-02-01T00:00:00\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 22,\n  \"quantidade\": 100,\n  \"quantidadeMinima\": 20,\n  \"dataEntrada\": \"2025-02-01T00:00:00\",\n  \"dataVencimento\": \"2027-02-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/estoques",
+              "raw": "{{baseURL}}/api/estoques",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "estoques"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Estoque por UBS (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -473,9 +580,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/estoques/ubs/1",
+              "raw": "{{baseURL}}/api/estoques/ubs/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -484,11 +591,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Estoque por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -497,21 +615,32 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/estoques/1",
+              "raw": "{{baseURL}}/api/estoques/2",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "2"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Atualizar Estoque",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -525,54 +654,35 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 1,\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01T00:00:00\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"medicamentoId\": 2,\n  \"quantidade\": 150,\n  \"quantidadeMinima\": 30,\n  \"dataVencimento\": \"2027-03-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/estoques/1",
+              "raw": "{{baseURL}}/api/estoques/2",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "2"
               ]
             }
-          }
-        },
-        {
-          "name": "Atualizar Quantidade",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM5MTU1NzQ2LCJleHAiOjE3MzkxNTkzNDZ9.test"
-              }
-            ],
-            "url": {
-              "raw": "http://localhost:8080/api/estoques/1/quantidade?novaQuantidade=80",
-              "host": [
-                "http://localhost:8080"
-              ],
-              "path": [
-                "api",
-                "estoques",
-                "1",
-                "quantidade"
-              ],
-              "query": [
-                {
-                  "key": "novaQuantidade",
-                  "value": "80"
-                }
-              ]
-            }
-          }
+          },
+          "response": []
         },
         {
           "name": "Deletar Estoque",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -581,17 +691,18 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/estoques/1",
+              "raw": "{{baseURL}}/api/estoques/2",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "estoques",
-                "1"
+                "2"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -601,6 +712,16 @@
         {
           "name": "Criar Solicitação (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiUk9MRV9NT1JBRE9SIiwiY3BmIjoiMDEyMzQ1Njc4OTAiLCJub21lIjoiSm_Do28gU2lsdmEiLCJ1c2VySWQiOjIsInVic0lkIjoxLCJzdWIiOiJqb2FvLnNpbHZhQHRlc3RlLmNvbSIsImlhdCI6MTc3MDY4Njk5OCwiZXhwIjoxNzcwNzczMzk4fQ.bXrhqdYqUv8hiCp7VUwt0O3ORJ9jFsU5lwHDPTQ2dPp4HAY-0Hd1SB4BpCgDP13g8AD9ibL6FY4FK1ko5IV2Vg",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -614,23 +735,34 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": 1,\n  \"medicamentoId\": 1,\n  \"ubsId\": 1,\n  \"quantidade\": 2\n}"
+              "raw": "{\n  \"usuarioId\": 2,\n  \"medicamentoId\": 3,\n  \"ubsId\": 1,\n  \"quantidade\": 3\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes",
+              "raw": "{{baseURL}}/api/solicitacoes",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "solicitacoes"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Solicitação por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -639,9 +771,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes/1",
+              "raw": "{{baseURL}}/api/solicitacoes/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -649,11 +781,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Minhas Solicitações (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -662,9 +805,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes/usuario/1",
+              "raw": "{{baseURL}}/api/solicitacoes/usuario/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -673,11 +816,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Solicitações Pendentes (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -686,9 +840,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes/ubs/1/pendentes",
+              "raw": "{{baseURL}}/api/solicitacoes/ubs/1/pendentes",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -698,11 +852,22 @@
                 "pendentes"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Aceitar Solicitação (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -711,22 +876,33 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes/1/aceitar",
+              "raw": "{{baseURL}}/api/solicitacoes/2/aceitar",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "solicitacoes",
-                "1",
+                "2",
                 "aceitar"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Recusar Solicitação (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -735,9 +911,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/solicitacoes/1/recusar?justificativa=Medicamento%20fora%20de%20estoque",
+              "raw": "{{baseURL}}/api/solicitacoes/1/recusar?justificativa=Medicamento fora de estoque",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -752,7 +928,8 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -762,6 +939,16 @@
         {
           "name": "Criar Vaga (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -775,23 +962,34 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"09:30\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2026-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"10:00\",\n  \"especialidade\": \"Clínica Geral\",\n  \"profissional\": \"Dr. Silva\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/vagas",
+              "raw": "{{baseURL}}/api/vagas",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "vagas"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Vagas por UBS (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -800,9 +998,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/vagas/ubs/1",
+              "raw": "{{baseURL}}/api/vagas/ubs/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -811,11 +1009,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Vagas Disponíveis",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -824,9 +1033,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/vagas/disponiveis?ubsId=1&data=2025-02-15&especialidade=Clínica Geral",
+              "raw": "{{baseURL}}/api/vagas/disponiveis?ubsId=1&data=2026-02-15&especialidade=Pediatria",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -840,19 +1049,30 @@
                 },
                 {
                   "key": "data",
-                  "value": "2025-02-15"
+                  "value": "2026-02-15"
                 },
                 {
                   "key": "especialidade",
-                  "value": "Clínica Geral"
+                  "value": "Pediatria"
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Vaga por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -861,9 +1081,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/vagas/1",
+              "raw": "{{baseURL}}/api/vagas/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -871,11 +1091,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Atualizar Vaga",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -889,24 +1120,35 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2025-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"09:30\",\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
+              "raw": "{\n  \"ubsId\": 1,\n  \"data\": \"2026-02-15\",\n  \"horaInicio\": \"09:00\",\n  \"horaFim\": \"09:30\",\n  \"disponivel\":false,\n  \"especialidade\": \"Pediatria\",\n  \"profissional\": \"Dra. Santos\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/vagas/1",
+              "raw": "{{baseURL}}/api/vagas/2",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "vagas",
-                "1"
+                "2"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Deletar Vaga",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -915,9 +1157,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/vagas/1",
+              "raw": "{{baseURL}}/api/vagas/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -925,7 +1167,8 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -935,6 +1178,16 @@
         {
           "name": "Agendar Consulta (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaTeste}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -943,9 +1196,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos?usuarioId=1&vagaId=1",
+              "raw": "{{baseURL}}/api/agendamentos?usuarioId=1&vagaId=5",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -958,15 +1211,26 @@
                 },
                 {
                   "key": "vagaId",
-                  "value": "1"
+                  "value": "5"
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Agendamento por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -975,9 +1239,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos/1",
+              "raw": "{{baseURL}}/api/agendamentos/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -985,11 +1249,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Meus Agendamentos (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -998,9 +1273,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos/meus?usuarioId=1",
+              "raw": "{{baseURL}}/api/agendamentos/meus?usuarioId=3",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1010,15 +1285,26 @@
               "query": [
                 {
                   "key": "usuarioId",
-                  "value": "1"
+                  "value": "3"
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Cancelar Agendamento (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -1027,14 +1313,14 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos/1?motivoCancelamento=N%C3%A3o%20posso%20comparecer",
+              "raw": "{{baseURL}}/api/agendamentos/2?motivoCancelamento=Não posso comparecer",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1"
+                "2"
               ],
               "query": [
                 {
@@ -1043,11 +1329,22 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Marcar Comparecimento (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -1056,22 +1353,33 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos/1/comparecimento",
+              "raw": "{{baseURL}}/api/agendamentos/2/comparecimento",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1",
+                "2",
                 "comparecimento"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Marcar Não-Comparecimento (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -1080,18 +1388,19 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/agendamentos/1/nao-comparecimento",
+              "raw": "{{baseURL}}/api/agendamentos/3/nao-comparecimento",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "agendamentos",
-                "1",
+                "3",
                 "nao-comparecimento"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -1101,6 +1410,16 @@
         {
           "name": "Criar Notícia (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -1117,20 +1436,31 @@
               "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Fevereiro 2025\",\n  \"conteudo\": \"A UBS informa que iniciará a campanha de vacinação contra gripe nesta semana. Compareça com seus documentos.\",\n  \"dataPublicacao\": \"2025-02-01T00:00:00\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/noticias",
+              "raw": "{{baseURL}}/api/noticias",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "noticias"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Obter Notícia por ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -1139,9 +1469,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/noticias/1",
+              "raw": "{{baseURL}}/api/noticias/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1149,11 +1479,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Minhas Notícias (Morador)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [
               {
@@ -1162,9 +1503,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/noticias/minhas?ubsId=1",
+              "raw": "{{baseURL}}/api/noticias/minhas?ubsId=1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1178,17 +1519,28 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Notícias Públicas por UBS",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaJoao}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/noticias/ubs/1",
+              "raw": "{{baseURL}}/api/noticias/ubs/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1197,11 +1549,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Atualizar Notícia (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [
               {
@@ -1218,9 +1581,9 @@
               "raw": "{\n  \"ubsId\": 1,\n  \"titulo\": \"Campanha de Vacinação - Atualização\",\n  \"conteudo\": \"A campanha foi prorrogada até 28 de fevereiro.\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/noticias/1",
+              "raw": "{{baseURL}}/api/noticias/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1228,11 +1591,22 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Deletar Notícia (Agente)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{senhaMaria}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -1241,9 +1615,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8080/api/noticias/1",
+              "raw": "{{baseURL}}/api/noticias/1",
               "host": [
-                "http://localhost:8080"
+                "{{baseURL}}"
               ],
               "path": [
                 "api",
@@ -1251,9 +1625,32 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "senhaMaria",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "senhaJoao",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "senhaTeste",
+      "value": "",
+      "type": "default"
     }
   ]
 }
