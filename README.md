@@ -1,35 +1,35 @@
-# 🏥 Meu Postinho - Sistema de Otimização de Atendimento em UBS
+# Meu Postinho - Sistema de Otimização de Atendimento em UBS
 
 Plataforma inovadora para otimizar o atendimento em Unidades Básicas de Saúde (UBS) do SUS, reduzindo no-shows, idas frustradas e melhorando a adesão ao tratamento.
 
 ---
 
-## 📋 Visão Geral
+## Visão Geral
 
 **Problema a resolver:**
 - Redução de no-shows (faltas) em consultas agendadas
 - Idas frustradas ao posto (medicamento em falta)
 - Falhas de comunicação entre UBS e população
 
-## 🎯 Recursos Principais
+## Recursos Principais
 
 ### Para Moradores (ROLE_MORADOR)
-- ✅ Cadastro e autenticação com CPF
-- ✅ Visualizar medicamentos disponíveis
-- ✅ Solicitar medicamentos
-- ✅ Agendar consultas
-- ✅ Cancelar agendamentos
-- ✅ Receber notícias e comunicados da UBS
+- Cadastro e autenticação com CPF
+- Visualizar medicamentos disponíveis
+- Solicitar medicamentos
+- Agendar consultas
+- Cancelar agendamentos
+- Receber notícias e comunicados da UBS
 
 ### Para Agentes (ACS/ACE) (ROLE_AGENTE)
-- ✅ Gerenciar estoque de medicamentos
-- ✅ Aceitar/recusar solicitações de medicamentos
-- ✅ Criar vagas/horários de consulta
-- ✅ Validação CPF + CNS via CNES
-- ✅ Publicar notícias/comunicados
+- Gerenciar estoque de medicamentos
+- Aceitar/recusar solicitações de medicamentos
+- Criar vagas/horários de consulta
+- Validação CPF + CNS via CNES
+- Publicar notícias/comunicados
 
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 
 ```
 Backend:
@@ -50,7 +50,7 @@ Infrastructure:
 
 ---
 
-## 🚀 Como Configurar e Rodar
+## Como Configurar e Rodar
 
 ### Pré-requisitos
 - Java 21+
@@ -96,26 +96,26 @@ Acesse em: `http://localhost:8080/swagger-ui.html`
 
 ### Endpoints Principais
 
-#### 🔐 Autenticação
+#### Autenticação
 ```
 POST /api/auth/login
 POST /api/auth/register
 ```
 
-#### 👥 Usuários e Agentes
+#### Usuários e Agentes
 ```
 POST   /api/usuarios              # Registrar morador
 POST   /api/agentes                # Registrar agente (com validação CNES)
 GET    /api/agentes/{id}           # Obter agente
 ```
 
-#### 🏥 UBS
+#### UBS
 ```
 GET    /api/ubs                    # Listar todas
 GET    /api/ubs/{id}               # Obter por ID
 ```
 
-#### 💊 Medicamentos
+#### Medicamentos
 ```
 GET    /api/medicamentos/disponiveis   # Listar disponíveis
 GET    /api/medicamentos                # Listar todos
@@ -123,7 +123,7 @@ GET    /api/medicamentos/{id}           # Obter por ID
 POST   /api/medicamentos                # Criar (Admin/Agente)
 ```
 
-#### 📦 Estoque
+#### Estoque
 ```
 POST   /api/estoques               # Criar estoque (Agente)
 GET    /api/estoques/ubs/{ubsId}   # Listar por UBS (Agente)
@@ -131,7 +131,7 @@ PUT    /api/estoques/{id}          # Atualizar (Agente)
 DELETE /api/estoques/{id}          # Deletar (Agente)
 ```
 
-#### 🩺 Solicitações de Medicamentos
+#### Solicitações de Medicamentos
 ```
 POST   /api/solicitacoes                 # Criar solicitação (Morador)
 GET    /api/solicitacoes/{id}            # Obter por ID
@@ -141,7 +141,7 @@ PUT    /api/solicitacoes/{id}/aceitar    # Aceitar (Agente)
 PUT    /api/solicitacoes/{id}/recusar    # Recusar (Agente)
 ```
 
-#### 🗓️ Vagas e Agendamentos
+#### Vagas e Agendamentos
 ```
 POST   /api/vagas                  # Criar vaga (Agente)
 GET    /api/vagas/ubs/{ubsId}      # Listar por UBS (Agente)
@@ -153,7 +153,7 @@ PUT    /api/agendamentos/{id}/comparecimento        # Marcar presença (Agente)
 PUT    /api/agendamentos/{id}/nao-comparecimento    # Marcar falta (Agente)
 ```
 
-#### 📰 Notícias
+#### Notícias
 ```
 POST   /api/noticias               # Criar notícia (Agente)
 GET    /api/noticias/{id}          # Obter por ID
@@ -165,7 +165,7 @@ DELETE /api/noticias/{id}          # Deletar (Agente)
 
 ---
 
-## 🔐 Autenticação e Autorização
+## Autenticação e Autorização
 
 ### Login
 ```bash
@@ -199,7 +199,7 @@ curl -X GET http://localhost:8080/api/agendamentos/meus \
 
 ---
 
-## 📊 Modelo de Dados
+## Modelo de Dados
 
 ### Entidades Principais
 
@@ -235,7 +235,7 @@ SolicitacaoMedicamento
 
 ---
 
-## 💾 Estrutura do Banco de Dados
+## Estrutura do Banco de Dados
 
 ### Tabelas principais:
 - `ubs` - Unidades de Saúde
@@ -254,7 +254,7 @@ SolicitacaoMedicamento
 
 ---
 
-## 🧪 Testando com cURL
+## Testando com cURL
 
 ### 1. Registrar um Morador
 
@@ -344,7 +344,7 @@ curl -X POST "http://localhost:8080/api/agendamentos?usuarioId=1&vagaId=1" \
 
 ---
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 meu-postinho/
@@ -431,7 +431,7 @@ meu-postinho/
 
 ---
 
-## 🔧 Variáveis de Ambiente
+## Variáveis de Ambiente
 
 ```env
 # Database
@@ -449,7 +449,7 @@ SERVER_PORT=8080
 
 ---
 
-## ✅ Checklist de Validação
+## Checklist de Validação
 
 - [x] Projeto compila com `mvn clean install`
 - [x] Docker Compose sobe com `docker-compose up`
@@ -464,7 +464,7 @@ SERVER_PORT=8080
 
 ---
 
-## 📊 Dados de Teste Iniciais
+## Dados de Teste Iniciais
 
 ### UBS Criadas (via Seed)
 1. **UBS Parque São Vicente** - Código CNES: 3509502
