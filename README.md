@@ -89,7 +89,7 @@ mvn spring-boot:run
 
 ---
 
-## 📚 Documentação da API
+## Documentação da API
 
 ### Swagger/OpenAPI
 Acesse em: `http://localhost:8080/swagger-ui.html`
